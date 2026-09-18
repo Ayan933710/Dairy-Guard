@@ -1,0 +1,2 @@
+ALTER TABLE risk_history
+  ALTER COLUMN source TYPE VARCHAR(80);
