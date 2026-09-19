@@ -33,6 +33,18 @@ async function listPending() {
   return rows;
 }
 
+async function listAll() {
+  const { rows } = await query(
+    `SELECT r.id, r.requested_district, r.status, r.created_at, r.reviewed_at,
+            u.id AS vet_id, u.full_name, u.email, u.phone, u.registration_number,
+            u.vet_state
+       FROM vet_district_requests r
+       JOIN users u ON u.id = r.vet_id
+      ORDER BY r.created_at DESC`
+  );
+  return rows;
+}
+
 async function approve(requestId, reviewerId) {
   const { rows } = await query(
     `UPDATE vet_district_requests AS r
@@ -55,4 +67,4 @@ async function reject(requestId, reviewerId) {
   return rows[0] || null;
 }
 
-module.exports = { create, findPendingByVet, listPending, approve, reject };
+module.exports = { create, findPendingByVet, listPending, listAll, approve, reject };

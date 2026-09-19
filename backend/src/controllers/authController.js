@@ -5,12 +5,13 @@ const { signToken } = require('../utils/jwt');
 const asyncHandler = require('../utils/asyncHandler');
 const env = require('../config/env');
 const vetRequestModel = require('../models/vetRequestModel');
+const auditModel = require('../models/auditModel');
 
 const VALID_ROLES = ['farmer', 'vet', 'cooperative_admin'];
 
 const register = asyncHandler(async (req, res) => {
   const { full_name, email, password, role = 'farmer', phone, farm_name,
-    vet_state, vet_district, registration_number, farm_state, farm_district,
+    vet_state, vet_district, vet_designation, registration_number, farm_state, farm_district,
     hub_latitude, hub_longitude } = req.body;
 
   const normalizedEmail = email?.trim().toLowerCase() || null;
@@ -21,8 +22,8 @@ const register = asyncHandler(async (req, res) => {
   if (!VALID_ROLES.includes(role)) {
     return res.status(400).json({ error: `role must be one of: ${VALID_ROLES.join(', ')}` });
   }
-  if (role === 'vet' && (!vet_state || !vet_district || !registration_number)) {
-    return res.status(400).json({ error: 'vet_state, vet_district and registration_number are required for Vet accounts.' });
+  if (role === 'vet' && (!vet_state || !vet_district || !vet_designation || !registration_number)) {
+    return res.status(400).json({ error: 'vet_state, vet_district, vet_designation and registration_number are required for Vet accounts.' });
   }
 
   if (!['en', 'hi', 'kn'].includes(preferred_language)) {
@@ -43,6 +44,7 @@ const register = asyncHandler(async (req, res) => {
     farm_name,
     vet_state,
     vet_district,
+    vet_designation,
     registration_number,
     preferred_language,
     farm_state,
@@ -55,6 +57,8 @@ const register = asyncHandler(async (req, res) => {
   if (role === 'vet') {
     await vetRequestModel.create(user.id, vet_district.trim());
   }
+
+  await auditModel.record({ actorId: user.id, action: 'account_created', entityType: 'user', entityId: user.id, details: { role, full_name } });
 
   const token = signToken(user);
   res.status(201).json({ token, user });
@@ -81,6 +85,7 @@ const login = asyncHandler(async (req, res) => {
 
   const token = signToken(user);
   delete user.password_hash;
+  await auditModel.record({ actorId: user.id, action: 'user_logged_in', entityType: 'user', entityId: user.id, details: { role: user.role } });
   res.json({ token, user });
 });
 

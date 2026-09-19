@@ -170,7 +170,7 @@ export default function FeaturesSection() {
           {t('workflowTitle')}
         </motion.h1>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-6">
           {WORKFLOW_STEPS.map((s) => (
             <motion.div
               key={s.step}

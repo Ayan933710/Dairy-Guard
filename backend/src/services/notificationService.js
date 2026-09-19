@@ -47,7 +47,7 @@ if (env.NOTIFY_EMAIL_ENABLED) {
 }
 
 const ALERT_COPY = {
-  en: { intro: 'DairyGuard AI Alert', ec: 'EC', temp: 'Skin temperature', rumination: 'Rumination change', action: 'Recommended action', view: 'View this animal' },
+  en: { intro: 'NANDI Alert', ec: 'EC', temp: 'Skin temperature', rumination: 'Rumination change', action: 'Recommended action', view: 'View this animal' },
   hi: { intro: 'DairyGuard AI अलर्ट', ec: 'EC', temp: 'त्वचा का तापमान', rumination: 'जुगाली में बदलाव', action: 'सुझाया गया कदम', view: 'पशु देखें' },
   kn: { intro: 'DairyGuard AI ಎಚ್ಚರಿಕೆ', ec: 'EC', temp: 'ಚರ್ಮದ ತಾಪಮಾನ', rumination: 'ಜುಗಾಲಿ ಬದಲಾವಣೆ', action: 'ಶಿಫಾರಸು ಮಾಡಿದ ಕ್ರಮ', view: 'ಪ್ರಾಣಿಯನ್ನು ನೋಡಿ' },
 };

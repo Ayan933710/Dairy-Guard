@@ -1,8 +1,8 @@
-# DairyGuard AI — Backend
+# NANDI — Backend
 
 Node.js/Express backend, PostgreSQL schema, real-time Socket.io layer, and
-IoT/AI integration points for **Project DairyGuard AI**. This service is
-built to plug directly into the existing `dairyguard-ai` React frontend and
+IoT/AI integration points for **Project NANDI**. This service is
+built to plug directly into the existing `nandi` React frontend and
 to receive telemetry from ESP32-S3 Smart Collars / Smart Cups, either
 directly over HTTP or via an MQTT broker bridge for LoRa-based hubs.
 

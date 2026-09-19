@@ -27,7 +27,7 @@ export default function HeroOverlay() {
             {t('exploreSystem')} <ArrowDownRight size={17} />
           </a>
           <a
-            href="https://www.youtube.com/results?search_query=DairyGuard+AI+demo"
+            href="https://www.youtube.com/results?search_query=NANDI+demo"
             target="_blank"
             rel="noreferrer"
             className="hero-demo-button"

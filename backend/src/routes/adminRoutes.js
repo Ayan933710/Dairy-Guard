@@ -1,11 +1,13 @@
 const express = require('express');
 const { protect, requireRole } = require('../middleware/authMiddleware');
-const { getOverview, createAccount, createAnimal, setUserActive, removeUser, listAnimals, removeAnimal } = require('../controllers/adminController');
+const { getOverview, createAccount, createAnimal, setUserActive, removeUser, listAnimals, removeAnimal, listActivity, listVetRequests } = require('../controllers/adminController');
 const { approveRequest, rejectRequest } = require('../controllers/vetRequestController');
 
 const router = express.Router();
 router.use(protect, requireRole('administrator'));
 router.get('/overview', getOverview);
+router.get('/activity', listActivity);
+router.get('/vet-requests', listVetRequests);
 router.post('/users', createAccount);
 router.post('/animals', createAnimal);
 router.get('/animals', listAnimals);

@@ -2,7 +2,7 @@
 const crypto = require('crypto');
 const { query } = require('../config/db');
 
-const PUBLIC_COLUMNS = 'id, full_name, email, role, phone, farm_name, farm_id, cooperative_id, vet_state, vet_district, registration_number, farm_state, farm_district, hub_latitude, hub_longitude, preferred_language, vet_approval_status, is_active, created_at';
+const PUBLIC_COLUMNS = 'id, full_name, email, role, phone, farm_name, farm_id, cooperative_id, vet_state, vet_district, vet_designation, registration_number, farm_state, farm_district, hub_latitude, hub_longitude, preferred_language, vet_approval_status, is_active, created_at';
 
 /** Short, human-typeable ID (e.g. "K7QX9F2A") shown in the top panel and used by hardware. */
 function generateFarmId() {
@@ -14,20 +14,20 @@ function generateFarmId() {
   return id;
 }
 
-async function create({ full_name, email, password_hash, role, phone, farm_name, vet_state, vet_district, registration_number, farm_state, farm_district, hub_latitude, hub_longitude, preferred_language = 'en', vet_approval_status = 'approved' }) {
+async function create({ full_name, email, password_hash, role, phone, farm_name, vet_state, vet_district, vet_designation, registration_number, farm_state, farm_district, hub_latitude, hub_longitude, preferred_language = 'en', vet_approval_status = 'approved' }) {
   // Generate IDs for both farm owners and cooperative accounts so hardware and
   // the dashboard can identify either account consistently.
   for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
       const { rows } = await query(
         `INSERT INTO users (full_name, email, password_hash, role, phone, farm_name, farm_id,
-                           vet_state, vet_district, registration_number, farm_state, farm_district,
+                           vet_state, vet_district, vet_designation, registration_number, farm_state, farm_district,
                            hub_latitude, hub_longitude, preferred_language, vet_approval_status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
          RETURNING ${PUBLIC_COLUMNS}`,
         [full_name, email, password_hash, role, phone, farm_name || null,
           ['farmer', 'cooperative_admin'].includes(role) ? generateFarmId() : null, vet_state || null, vet_district || null,
-          registration_number || null, farm_state || null, farm_district || null,
+          vet_designation || null, registration_number || null, farm_state || null, farm_district || null,
           hub_latitude || null, hub_longitude || null, preferred_language, vet_approval_status]
       );
       return rows[0];

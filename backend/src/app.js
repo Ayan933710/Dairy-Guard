@@ -37,7 +37,7 @@ app.use('/api', apiLimiter);
 app.use('/api', apiRoutes);
 
 app.get('/', (req, res) => {
-  res.json({ message: 'DairyGuard AI backend is running. See /api/health for status.' });
+  res.json({ message: 'NANDI backend is running. See /api/health for status.' });
 });
 
 app.use(notFound);

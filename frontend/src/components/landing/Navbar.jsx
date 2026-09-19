@@ -16,7 +16,7 @@ export default function Navbar({ onLogin, onSignup, onEnterPlatform }) {
       <div className="flex items-center gap-2">
         <span className="brand-mark"><span /></span>
         <span className="brand-name font-display text-lg tracking-tight">
-          DairyGuard <span className="brand-name-accent">AI</span>
+          NANDI
         </span>
       </div>
 
@@ -26,7 +26,7 @@ export default function Navbar({ onLogin, onSignup, onEnterPlatform }) {
         <MagneticButton
           type="button"
           onClick={onLogin}
-          className="focus-ring hidden rounded-full px-4 py-2 text-sm text-theme-text-muted transition-all duration-200 hover:bg-sky-50 hover:text-sky-700 sm:block"
+          className="focus-ring hidden rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-sky-600 sm:block"
         >
           {t('logIn')}
         </MagneticButton>

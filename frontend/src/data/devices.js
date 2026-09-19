@@ -4,7 +4,7 @@ export const DEVICES = {
     id: 'collar',
     name: 'Smart Collar',
     tagline: '24/7 rumination & motility tracking',
-    price: '₹2,500 / unit',
+    price: 'Rs. 2000 / unit',
     specs: [
       { label: 'Core', value: 'ESP32 dual-core, deep-sleep scheduling' },
       { label: 'Sensing', value: 'MPU6050 accelerometer + DS18B20 skin temp' },
@@ -14,9 +14,9 @@ export const DEVICES = {
   },
   cup: {
     id: 'cup',
-    name: 'Smart Cup v2.1',
+    name: 'Digi-Cup',
     tagline: 'Quarter-level milk chemistry in under 45 seconds',
-    price: '₹4,800 / unit',
+    price: 'Rs. 5000 / unit',
     specs: [
       { label: 'Chemistry', value: 'EC + pH probes detect ionic/alkaline shift' },
       { label: 'Rheology', value: 'Motorized CMT viscosity (torque via current draw)' },
@@ -26,9 +26,9 @@ export const DEVICES = {
   },
   hub: {
     id: 'hub',
-    name: 'DairyGuard Hub',
+    name: 'Central Hub',
     tagline: 'One gateway for every signal in the shed',
-    price: '₹6,900 / unit',
+    price: 'Rs. 5000 / unit',
     specs: [
       { label: 'Uplink', value: 'LoRa receiver with 3–5 km shed coverage' },
       { label: 'Backhaul', value: 'Wi-Fi and 4G-ready cloud sync' },

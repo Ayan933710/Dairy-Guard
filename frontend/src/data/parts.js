@@ -61,7 +61,7 @@ export const CUP_PARTS = [
     id: 'rfid',
     name: '134.2 kHz LF RFID',
     role: 'Animal ID',
-    detail: 'Reads the ear tag through milk and mud in under a second.',
+    detail: 'Reads the RFID tag through milk and mud in under a second.',
   },
 ];
 
@@ -90,18 +90,24 @@ export const HUB_PARTS = [
     role: 'Always-on uptime',
     detail: 'Maintains the signal bridge through short power interruptions.',
   },
+  {
+    id: 'solar',
+    name: 'Solar powered charging',
+    role: 'Renewable power',
+    detail: 'Uses sunlight to keep the Central Hub charged and ready for continuous operation.',
+  },
 ];
 
 export const WORKFLOW_STEPS = [
   {
     step: '01',
-    title: 'Scan the ear tag',
+    title: 'Scan the Collar RFID tag',
     detail: 'The cup\u2019s RFID reader pulls the animal ID and lactation history in under 500ms.',
   },
   {
     step: '02',
     title: 'Sample each quarter',
-    detail: 'EC, pH, IR temperature and flow are read per-quarter, ~10 seconds each.',
+    detail: 'EC, pH and IR temperature are read per-quarter, ~10 seconds each.',
   },
   {
     step: '03',
@@ -117,5 +123,10 @@ export const WORKFLOW_STEPS = [
     step: '05',
     title: 'Fuse & forecast',
     detail: 'Cloud AI combines chemistry, rumination and weather into a 7\u201314 day risk score.',
+  },
+  {
+    step: '06',
+    title: 'Send alerts',
+    detail: 'Alerts are sent to farmers and vets so the right care can begin sooner.',
   },
 ];

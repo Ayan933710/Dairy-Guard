@@ -49,10 +49,10 @@ export function AuthProvider({ children }) {
     return loggedInUser;
   }, []);
 
-  const register = useCallback(async ({ full_name, email, password, role, phone, farm_name, vet_state, vet_district, registration_number, preferred_language }) => {
+  const register = useCallback(async ({ full_name, email, password, role, phone, farm_name, vet_state, vet_district, vet_designation, registration_number, preferred_language }) => {
     const { token, user: newUser } = await api.post(
       '/auth/register',
-      { full_name, email, password, role, phone, farm_name, vet_state, vet_district, registration_number, preferred_language },
+      { full_name, email, password, role, phone, farm_name, vet_state, vet_district, vet_designation, registration_number, preferred_language },
       { auth: false }
     );
     setToken(token);

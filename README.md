@@ -1,6 +1,6 @@
-# DairyGuard AI — Full-Stack Project
+# NANDI — Full-Stack Project
 
-This package contains the complete **DairyGuard AI** application:
+This package contains the complete **NANDI** application:
 
 ```
 dairyguard-ai-fullstack/
@@ -8,7 +8,7 @@ dairyguard-ai-fullstack/
 └── backend/     # Node.js/Express API, PostgreSQL schema, Socket.io, IoT ingestion, AI-service bridge
 ```
 
-DairyGuard AI tracks **cows and buffaloes** (goats are not supported).
+NANDI tracks **cows and buffaloes** (goats are not supported).
 Every screen and button in the frontend is wired to the backend — login,
 herd management, analytics, predictions, and history all run on live data.
 

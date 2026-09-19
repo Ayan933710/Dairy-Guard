@@ -1,7 +1,7 @@
 {
-  "name": "dairyguard-ai-backend",
+  "name": "nandi-backend",
   "version": "1.0.0",
-  "description": "Backend API, real-time telemetry gateway, and AI-inference bridge for Project DairyGuard AI.",
+  "description": "Backend API, real-time telemetry gateway, and AI-inference bridge for Project NANDI.",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {

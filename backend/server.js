@@ -14,14 +14,31 @@ const { startMqttBridge } = require('./src/services/mqttBridge');
 
 const httpServer = http.createServer(app);
 
-initSocket(httpServer);
-startMqttBridge();
+function startServer(port) {
+  const server = http.createServer(app);
 
-httpServer.listen(env.PORT, () => {
-  logger.info(`DairyGuard AI backend listening on http://localhost:${env.PORT}`);
-  logger.info(`Environment: ${env.NODE_ENV}`);
-  logger.info(`Allowed CORS origins: ${env.CLIENT_ORIGIN.join(', ')}`);
-});
+  initSocket(server);
+  startMqttBridge();
+
+  server.on('error', (error) => {
+    if (error && error.code === 'EADDRINUSE') {
+      logger.warn(`Port ${port} is already in use. Retrying on ${port + 1}...`);
+      startServer(port + 1);
+      return;
+    }
+
+    logger.error('Server startup error:', error);
+    throw error;
+  });
+
+  server.listen(port, () => {
+    logger.info(`NANDI backend listening on http://localhost:${port}`);
+    logger.info(`Environment: ${env.NODE_ENV}`);
+    logger.info(`Allowed CORS origins: ${env.CLIENT_ORIGIN.join(', ')}`);
+  });
+}
+
+startServer(env.PORT);
 
 process.on('unhandledRejection', (err) => {
   logger.error('Unhandled Rejection:', err);

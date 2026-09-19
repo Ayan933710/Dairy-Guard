@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Bounds, OrbitControls, Environment, ContactShadows, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
@@ -31,94 +31,9 @@ function RealDeviceModel({ type, hovered }) {
   );
 }
 
-function CollarMesh({ hovered }) {
-  return (
-    <group rotation={[0.15, 0, 0]}>
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.55, 0.1, 12, 32]} />
-        <meshStandardMaterial color={hovered ? '#0EA5E9' : '#233A2F'} emissive={hovered ? '#0369A1' : '#000000'} roughness={0.4} metalness={0.35} />
-      </mesh>
-      <mesh position={[0.45, -0.12, 0.1]}>
-        <boxGeometry args={[0.26, 0.2, 0.14]} />
-        <meshStandardMaterial color="#0f1a17" roughness={0.5} />
-      </mesh>
-      <mesh position={[0.6, -0.12, 0.1]}>
-        <sphereGeometry args={[0.03, 8, 8]} />
-        <meshStandardMaterial color="#4C8A68" emissive="#4C8A68" emissiveIntensity={1.4} />
-      </mesh>
-    </group>
-  );
-}
-
-function CupMesh({ hovered }) {
-  return (
-    <group>
-      <mesh>
-        <cylinderGeometry args={[0.34, 0.28, 0.5, 24]} />
-        <meshStandardMaterial color={hovered ? '#38BDF8' : '#F6F2E7'} roughness={0.35} />
-      </mesh>
-      <mesh position={[0, 0.16, 0.31]}>
-        <boxGeometry args={[0.24, 0.15, 0.02]} />
-        <meshStandardMaterial color="#0f1a17" emissive="#2F5D46" emissiveIntensity={0.7} />
-      </mesh>
-      <mesh position={[0, -0.36, 0]}>
-        <cylinderGeometry args={[0.09, 0.06, 0.24, 12]} />
-        <meshStandardMaterial color="#233A2F" metalness={0.5} roughness={0.4} />
-      </mesh>
-    </group>
-  );
-}
-
-function HubMesh({ hovered }) {
-  return (
-    <group>
-      <mesh>
-        <boxGeometry args={[0.82, 0.58, 0.3]} />
-        <meshStandardMaterial color={hovered ? '#0EA5E9' : '#233A2F'} roughness={0.38} metalness={0.18} />
-      </mesh>
-      <mesh position={[0, 0.03, 0.16]}>
-        <boxGeometry args={[0.42, 0.16, 0.018]} />
-        <meshStandardMaterial color="#0f1a17" emissive="#2F5D46" emissiveIntensity={0.9} />
-      </mesh>
-      <mesh position={[-0.28, -0.18, 0.16]}>
-        <sphereGeometry args={[0.025, 10, 10]} />
-        <meshStandardMaterial color="#6FC58D" emissive="#6FC58D" emissiveIntensity={1.5} />
-      </mesh>
-      <mesh position={[-0.18, -0.18, 0.16]}>
-        <sphereGeometry args={[0.025, 10, 10]} />
-        <meshStandardMaterial color="#0EA5E9" emissive="#0EA5E9" emissiveIntensity={1.5} />
-      </mesh>
-      <mesh position={[0.28, 0.42, 0]}>
-        <cylinderGeometry args={[0.025, 0.025, 0.34, 10]} />
-        <meshStandardMaterial color="#CFC9B8" metalness={0.6} roughness={0.3} />
-      </mesh>
-    </group>
-  );
-}
-
 function InteractiveDevice({ type, onSelect }) {
   const groupRef = useRef();
   const [hovered, setHovered] = useState(false);
-  const [useFallback, setUseFallback] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    const modelPath = MODEL_PATHS[type];
-
-    fetch(modelPath)
-      .then((response) => {
-        const contentType = response.headers.get('content-type') || '';
-        const isModelResponse = response.ok && !contentType.includes('text/html');
-        if (active) setUseFallback(!isModelResponse);
-      })
-      .catch(() => {
-        if (active) setUseFallback(true);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [type]);
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -134,17 +49,9 @@ function InteractiveDevice({ type, onSelect }) {
       onClick={(event) => { event.stopPropagation(); onSelect(type); }}
       scale={hovered ? 1.12 : 1}
     >
-      {useFallback ? (
-        <>
-          {type === 'collar' ? <CollarMesh hovered={hovered} /> : type === 'cup' ? <CupMesh hovered={hovered} /> : <HubMesh hovered={hovered} />}
-        </>
-      ) : (
-        <Suspense fallback={
-          type === 'collar' ? <CollarMesh hovered={hovered} /> : type === 'cup' ? <CupMesh hovered={hovered} /> : <HubMesh hovered={hovered} />
-        }>
-          <RealDeviceModel type={type} hovered={hovered} />
-        </Suspense>
-      )}
+      <Suspense fallback={null}>
+        <RealDeviceModel type={type} hovered={hovered} />
+      </Suspense>
     </group>
   );
 }
