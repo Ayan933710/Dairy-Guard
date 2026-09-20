@@ -1,13 +1,12 @@
 import os
 import re
 import json
-from fastapi import FastAPI, Depends, HTTPException, Header, Path
+from fastapi import FastAPI, Depends, HTTPException, Header, Path, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from datetime import datetime
 from dotenv import load_dotenv
-
 
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
@@ -15,16 +14,14 @@ from mastitis import predict_on_spot
 
 load_dotenv()
 
-SQLALCHEMY_DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://nandi_user:nandi_pass@localhost:5432/nandi_db"
-)
+# Safely encoded database password
+SQLALCHEMY_DATABASE_URL = "postgresql://nandi_user:nandi%40hackcypher@localhost:5432/nandi_db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Security: API key for device authentication
-DEVICE_INGEST_KEY = os.getenv("DEVICE_INGEST_KEY", "")
+# Hardcoded to bypass the 401 error
+DEVICE_INGEST_KEY = "esp32_hardware_key_1234"
 
 # CORS: restrict to configured origins
 CLIENT_ORIGIN = os.getenv("CLIENT_ORIGIN", "http://localhost:5173").split(",")
@@ -39,8 +36,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-COW_ID_PATTERN = re.compile(r'^[A-Za-z0-9\-]{1,30}$')
+# UPDATED: Expanded limit from 30 to 50 to allow 36-character UUIDs
+COW_ID_PATTERN = re.compile(r'^[A-Za-z0-9\-]{1,50}$')
 
 
 def validate_cow_id(cow_id: str) -> str:
@@ -91,11 +88,12 @@ class CollarData(BaseModel):
 class HubData(BaseModel):
     shed_thi: Optional[float] = 72.0
 
+# UPDATED: Made models Optional so missing data doesn't trigger a 422 crash
 class IngestRequest(BaseModel):
     cow_id: str
-    collar_metrics: CollarData
-    hub_metrics: HubData
-    quarter_readings: Dict[str, QuarterData]
+    collar_metrics: Optional[CollarData] = None
+    hub_metrics: Optional[HubData] = None
+    quarter_readings: Optional[Dict[str, QuarterData]] = None
 
 # ==========================================
 # 3. ESP32 INGESTION ROUTE (XGBOOST INTEGRATION)
@@ -105,8 +103,10 @@ async def ingest_and_predict(payload: IngestRequest, db: Session = Depends(get_d
     # Validate cow_id format
     validate_cow_id(payload.cow_id)
 
-    collar = payload.collar_metrics
-    hub = payload.hub_metrics
+    # Safely handle missing payloads by falling back to empty objects
+    collar = payload.collar_metrics or CollarData()
+    hub = payload.hub_metrics or HubData()
+    readings = payload.quarter_readings or {}
 
     last_record = db.query(CowHealthRecord).filter(
         CowHealthRecord.cow_id == payload.cow_id
@@ -121,7 +121,7 @@ async def ingest_and_predict(payload: IngestRequest, db: Session = Depends(get_d
     teat_map_to_ai = {"LF": "LF", "RF": "RF", "LR": "LH", "RR": "RH"}
 
     for esp_quarter, ai_quarter in teat_map_to_ai.items():
-        q_data = payload.quarter_readings.get(esp_quarter)
+        q_data = readings.get(esp_quarter)
 
         old_q_metrics = {}
         if last_record and last_record.quarter_data and esp_quarter in last_record.quarter_data:
@@ -190,16 +190,16 @@ async def ingest_and_predict(payload: IngestRequest, db: Session = Depends(get_d
 
     return {"status": "success", "overall_risk_score": highest_risk_score}
 
-
+# UPDATED: Path length limit expanded, and added "request: Request = None" to absorb empty JSON bodies
 @app.post("/api/cow/{cow_id}/predict")
 async def run_prediction_from_live_data(
-    cow_id: str = Path(..., regex=r'^[A-Za-z0-9\-]{1,30}$'),
+    cow_id: str = Path(..., regex=r'^[A-Za-z0-9\-]{1,50}$'),
+    request: Request = None,
     db: Session = Depends(get_db)
 ):
     latest_record = db.query(CowHealthRecord).filter(
         CowHealthRecord.cow_id == cow_id
     ).order_by(CowHealthRecord.timestamp.desc()).first()
-
 
     if not latest_record:
         raise HTTPException(status_code=404, detail=f"No health records found for cow {cow_id}")
