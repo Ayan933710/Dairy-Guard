@@ -58,7 +58,7 @@ The hardware is designed for low power consumption and high resilience. Core mic
 
 ## 9. Software Architecture
 - **Frontend:** React, Tailwind CSS, Recharts, i18next.
-- **Backend (Main API):** Node.js, Express, MongoDB (Mongoose), Socket.io for live updates.
+- **Backend (Main API):** Node.js, Express, PostgreSQL, Socket.io for live updates.
 - **Backend (AI Core):** Python, FastAPI, scikit-learn, Pandas.
 - **Cloud/Infra:** RESTful APIs, Twilio for SMS.
 
@@ -122,10 +122,10 @@ The web platform offers distinct dashboards for Farmers, Administrators, and Vet
 - **FastAPI:** Exposes endpoints for the AI model to predict mastitis probability based on incoming telemetry.
 
 ## 20. Database
-**MongoDB** is used for its flexibility in handling time-series IoT data.
-- `User` collection: Auth and roles.
-- `Animal` collection: Profiles and static data.
-- `Telemetry` collection: Time-series logs from collars and cups.
+**PostgreSQL** is used for relational data management and robust time-series IoT data logging.
+- `users` table: Auth and roles.
+- `animals` table: Profiles and static data.
+- `telemetry` table: Time-series logs from collars and cups.
 
 ## 21. Communication Protocol
 - **Edge to Hub:** LoRa (Custom binary packets for low overhead).
@@ -136,7 +136,7 @@ The web platform offers distinct dashboards for Farmers, Administrators, and Vet
 1. Sensors -> Microcontroller (Raw Data)
 2. Microcontroller -> LoRa (Compressed Binary Packet)
 3. Central Hub -> Internet (JSON payload via Wi-Fi/4G)
-4. Node.js Backend -> MongoDB (Storage) & FastAPI (Inference)
+4. Node.js Backend -> PostgreSQL (Storage) & FastAPI (Inference)
 5. Backend -> Frontend (Real-time updates via WebSockets)
 
 ## 23. APIs
@@ -149,7 +149,7 @@ The web platform offers distinct dashboards for Farmers, Administrators, and Vet
 - **IoT & Hardware:** ESP32, LoRa (SX1278), C++
 - **Frontend:** React.js, Vite, Tailwind CSS, Recharts
 - **Backend:** Node.js, Express, Python, FastAPI
-- **Database:** MongoDB
+- **Database:** PostgreSQL
 - **Cloud:** Twilio (SMS Alerts)
 
 ## 25. Project Folder Structure
@@ -180,7 +180,7 @@ Dairy-Guard/
 ## 28. Software Prerequisites
 - Node.js (v18+)
 - Python (3.9+)
-- MongoDB (Local or Atlas)
+- PostgreSQL (Local or Hosted)
 - Git
 
 ## 29. Software Installation
@@ -202,7 +202,7 @@ npm install
 Create a `.env` file in the `backend/` directory:
 ```env
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/nandi
+DATABASE_URL=postgres://nandi_user:your_secure_password@localhost:5432/nandi_db
 JWT_SECRET=your_super_secret_key
 FRONTEND_URL=http://localhost:5173
 ```
@@ -218,7 +218,7 @@ FRONTEND_URL=http://localhost:5173
 - The Central Hub must be configured with the local Wi-Fi credentials and the API endpoint URL.
 
 ## 33. Running the Complete System
-1. **Start the database:** Ensure MongoDB is running.
+1. **Start the database:** Ensure PostgreSQL is running.
 2. **Start the Node Backend:** `cd backend && npm run dev`
 3. **Start the FastAPI Backend:** (Follow FastAPI instructions in its directory)
 4. **Start the Frontend:** `cd frontend && npm run dev`
@@ -251,7 +251,7 @@ Initial field tests show a 94% accuracy in detecting elevated somatic cell count
 - **Central Hub:** 12V Lead-Acid or large Li-ion pack with 5W Solar Panel.
 
 ## 40. Performance
-- **Scalability:** The Node.js and MongoDB backend can scale to handle thousands of concurrent sensor streams.
+- **Scalability:** The Node.js and PostgreSQL backend can scale to handle thousands of concurrent sensor streams.
 - **Latency:** End-to-end latency from sensor reading to UI update is < 2 seconds.
 
 ## 41. Limitations
@@ -272,7 +272,7 @@ Initial field tests show a 94% accuracy in detecting elevated somatic cell count
 ## 44. Deployment
 - Use Docker to containerize the backend APIs.
 - Deploy the frontend to Vercel, Netlify, or AWS S3.
-- Host the MongoDB instance on MongoDB Atlas.
+- Host the PostgreSQL database on a managed service like AWS RDS, Supabase, or Neon.
 
 ## 45. Maintenance
 - **Digi-Cup:** Must be washed and sanitized after every milking session.

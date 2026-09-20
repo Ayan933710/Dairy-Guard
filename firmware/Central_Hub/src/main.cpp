@@ -5,6 +5,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include <ArduinoJson.h>
+#include <SD.h>
 
 // --- TinyGSM Configuration ---
 #define TINY_GSM_MODEM_SIM7600
@@ -16,7 +17,7 @@
 #define MODEM_TX 16
 HardwareSerial modemSerial(1);
 
-// --- Custom LoRa SPI & Control Pins ---
+// --- Custom LoRa SPI Pins (Bus 1 - Default SPI) ---
 #define LORA_SCK 12
 #define LORA_MISO 13
 #define LORA_MOSI 11
@@ -24,14 +25,23 @@ HardwareSerial modemSerial(1);
 #define LORA_RST 47
 #define LORA_DIO0 14
 
+// --- Custom SD Card SPI Pins (Bus 2 - HSPI) ---
+#define SD_SCK 5
+#define SD_MISO 6
+#define SD_MOSI 7
+#define SD_CS 4
+
+// Create the dedicated SPI bus for the SD Card
+SPIClass sdSPI(HSPI);
+
 // --- Custom BME280 I2C Pins ---
 #define I2C_SDA 8
 #define I2C_SCL 9
 Adafruit_BME280 bme;
 
 // --- Cloud Endpoint ---
-const char server[] = "bore.pub";
-const int port = 61695;
+const char server[] = "silly-mammals-ask.loca.lt";
+const int port = 80;
 const char resource[] = "/api/sensors/ingest";
 const char apn[] = "jionet";
 
@@ -40,55 +50,46 @@ TinyGsmClient client(modem);
 HttpClient http(client, server, port);
 
 // --- Timers ---
-unsigned long previousMillis = 0;
-const long uploadInterval = 30000; // 30 seconds sync window
-
 unsigned long previousBmeMillis = 0;
 const long bmeInterval = 5000;
 
 // ==========================================
-// 1. DATA STORAGE & WINDOW TRACKING
+// 1. DATA STORAGE & EVENT FLAGS
 // ==========================================
-struct CollarTelemetry
-{
-  float cow_body_temp = 0.0;
-  float rumination_delta = 0.0;
-};
-
-struct SmartCupTelemetry
-{
-  float ec = 0.0, ph = 0.0, viscosity = 0.0;
-  int r = 0, g = 0, b = 0;
-  String rfid = "";
-  String quarter = "";
-};
-
-CollarTelemetry collarData;
-SmartCupTelemetry quarters[4];
-
-bool collarReady = false;
-bool cupReady[4] = {false, false, false, false};
-
-// Mutex for safe multi-core access
 portMUX_TYPE telemetryMutex = portMUX_INITIALIZER_UNLOCKED;
 
-void resetDataWindow()
+String currentCowId = "";
+
+// Collar Storage
+bool collarReady = false;
+float collarTemp = 0.0;
+float collarRum = 0.0;
+
+// Cup Storage
+bool cupReady = false;
+struct Quarter
 {
-  portENTER_CRITICAL(&telemetryMutex);
-  collarReady = false;
-  for (int i = 0; i < 4; i++)
-    cupReady[i] = false;
-  portEXIT_CRITICAL(&telemetryMutex);
-}
+  float ec;
+  float ph;
+  float v;
+  int r;
+  int g;
+  int b;
+};
+Quarter qLF, qRF, qLR, qRR;
 
 String classifyMilkColor(int r, int g, int b)
 {
-  if (r > 150 && g < 100 && b < 100)
+  if (r > 230 && g > 230 && b > 200)
+    return "Normal";
+  else if (r > 150 && g < 100 && b < 100)
     return "Bloody";
   else if (r > 150 && g > 150 && b < 100)
     return "Clotted";
-  else if (r < 100 && g < 100 && b > 120)
+  else if (r < 150 && g < 150 && b > 150)
     return "Watery";
+  else if (r > 180 && g > 150 && b < 150)
+    return "Flaky";
   else
     return "Normal";
 }
@@ -98,6 +99,8 @@ String classifyMilkColor(int r, int g, int b)
 // ==========================================
 void loraListenerTask(void *pvParameters)
 {
+  Serial.println("✅ [Core 0] Background LoRa task successfully booted and listening!");
+
   for (;;)
   {
     int packetSize = LoRa.parsePacket();
@@ -107,88 +110,100 @@ void loraListenerTask(void *pvParameters)
       while (LoRa.available())
         incoming += (char)LoRa.read();
 
-      // Software Shield Filter
-      if (incoming.startsWith("{\"type\""))
+      Serial.println("\n🚨 [RAW LORA] -> " + incoming);
+
+      // BULLETPROOF SHIELD: Ignore radio noise, find only the JSON
+      int firstBrace = incoming.indexOf('{');
+      int lastBrace = incoming.lastIndexOf('}');
+
+      if (firstBrace >= 0 && lastBrace > firstBrace)
       {
-        StaticJsonDocument<256> doc;
-        DeserializationError error = deserializeJson(doc, incoming);
+        String cleanJson = incoming.substring(firstBrace, lastBrace + 1);
+
+        // Massive 1024-byte dynamic heap memory to prevent array overflow crashes
+        DynamicJsonDocument doc(1024);
+        DeserializationError error = deserializeJson(doc, cleanJson);
 
         if (!error)
         {
           String type = doc["type"];
-
-          // Temporary local variables to hold values for printing outside critical lock
           bool printCollar = false;
-          float pTemp = 0, pRum = 0;
           bool printCup = false;
-          String pQ = "", pRfid = "";
-          float pPh = 0, pEc = 0, pVisc = 0;
-          int pR = 0, pG = 0, pB = 0;
 
           portENTER_CRITICAL(&telemetryMutex);
-          if (type == "collar")
+
+          if (type == "SmartCollar")
           {
-            collarData.cow_body_temp = doc["temp"];
-            collarData.rumination_delta = doc["rumination"];
+            currentCowId = doc["id"].as<String>();
+            collarTemp = doc["tmp"];
+            collarRum = doc["rum"];
             collarReady = true;
-
             printCollar = true;
-            pTemp = collarData.cow_body_temp;
-            pRum = collarData.rumination_delta;
           }
-          else if (type == "cup")
+          else if (type == "DigiCup")
           {
-            String q = doc["quarter"];
-            int idx = (q == "LF") ? 0 : (q == "RF") ? 1
-                                    : (q == "LR")   ? 2
-                                                    : 3;
-            quarters[idx].ec = doc["ec"];
-            quarters[idx].ph = doc["ph"];
-            quarters[idx].r = doc["r"];
-            quarters[idx].g = doc["g"];
-            quarters[idx].b = doc["b"];
-            quarters[idx].viscosity = doc["viscosity"];
-            quarters[idx].rfid = doc["rfid"].as<String>();
-            quarters[idx].quarter = q;
-            cupReady[idx] = true;
+            currentCowId = doc["id"].as<String>();
 
+            qLF.ec = doc["LF"]["ec"];
+            qLF.ph = doc["LF"]["ph"];
+            qLF.v = doc["LF"]["v"];
+            qLF.r = doc["LF"]["rgb"][0];
+            qLF.g = doc["LF"]["rgb"][1];
+            qLF.b = doc["LF"]["rgb"][2];
+
+            qRF.ec = doc["RF"]["ec"];
+            qRF.ph = doc["RF"]["ph"];
+            qRF.v = doc["RF"]["v"];
+            qRF.r = doc["RF"]["rgb"][0];
+            qRF.g = doc["RF"]["rgb"][1];
+            qRF.b = doc["RF"]["rgb"][2];
+
+            qLR.ec = doc["LR"]["ec"];
+            qLR.ph = doc["LR"]["ph"];
+            qLR.v = doc["LR"]["v"];
+            qLR.r = doc["LR"]["rgb"][0];
+            qLR.g = doc["LR"]["rgb"][1];
+            qLR.b = doc["LR"]["rgb"][2];
+
+            qRR.ec = doc["RR"]["ec"];
+            qRR.ph = doc["RR"]["ph"];
+            qRR.v = doc["RR"]["v"];
+            qRR.r = doc["RR"]["rgb"][0];
+            qRR.g = doc["RR"]["rgb"][1];
+            qRR.b = doc["RR"]["rgb"][2];
+
+            cupReady = true;
             printCup = true;
-            pQ = q;
-            pRfid = quarters[idx].rfid;
-            pPh = quarters[idx].ph;
-            pEc = quarters[idx].ec;
-            pVisc = quarters[idx].viscosity;
-            pR = quarters[idx].r;
-            pG = quarters[idx].g;
-            pB = quarters[idx].b;
           }
+
           portEXIT_CRITICAL(&telemetryMutex);
 
-          // 👉 SAFE PRINTING OUTSIDE THE CRITICAL SECTION
+          // Safe Serial Printing OUTSIDE the Mutex lock
           if (printCollar)
           {
-            Serial.println("\n-----------------------------------------");
-            Serial.println("🛸 [LoRa Core 0] Received Smart Collar Data:");
-            Serial.printf("   -> Body Temp: %.1f °C\n", pTemp);
-            Serial.printf("   -> Rumination Delta: %.1f\n", pRum);
+            Serial.println("-----------------------------------------");
+            Serial.println("🛸 [LoRa Core 0] SmartCollar Data Parsed:");
+            Serial.printf("   -> ID: %s | Temp: %.1f °C | Rumination: %.1f\n", currentCowId.c_str(), collarTemp, collarRum);
             Serial.println("-----------------------------------------");
           }
-
           if (printCup)
           {
-            String milkStatus = classifyMilkColor(pR, pG, pB);
-            Serial.println("\n-----------------------------------------");
-            Serial.printf("🛸 [LoRa Core 0] Received Smart Cup Data [%s]:\n", pQ.c_str());
-            Serial.printf("   -> RFID: %s\n", pRfid.c_str());
-            Serial.printf("   -> pH: %.2f | EC: %.2f mS/cm\n", pPh, pEc);
-            Serial.printf("   -> Viscosity: %.1f mA\n", pVisc);
-            Serial.printf("   -> Color Classification: %s (R:%d, G:%d, B:%d)\n",
-                          milkStatus.c_str(), pR, pG, pB);
+            Serial.println("-----------------------------------------");
+            Serial.println("🛸 [LoRa Core 0] DigiCup Data Parsed:");
+            Serial.printf("   -> LF: EC=%.1f | pH=%.1f | Color=%s\n", qLF.ec, qLF.ph, classifyMilkColor(qLF.r, qLF.g, qLF.b).c_str());
+            Serial.printf("   -> RF: EC=%.1f | pH=%.1f | Color=%s\n", qRF.ec, qRF.ph, classifyMilkColor(qRF.r, qRF.g, qRF.b).c_str());
+            Serial.printf("   -> LR: EC=%.1f | pH=%.1f | Color=%s\n", qLR.ec, qLR.ph, classifyMilkColor(qLR.r, qLR.g, qLR.b).c_str());
+            Serial.printf("   -> RR: EC=%.1f | pH=%.1f | Color=%s\n", qRR.ec, qRR.ph, classifyMilkColor(qRR.r, qRR.g, qRR.b).c_str());
             Serial.println("-----------------------------------------");
           }
         }
+        else
+        {
+          Serial.println("⚠️ JSON Parse Error: " + String(error.c_str()));
+        }
       }
     }
+    // Absolutely critical delay to prevent Core 0 watchdog crash
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -199,8 +214,13 @@ void setup()
   delay(3000);
 
   Serial.println("\n======================================");
-  Serial.println("BovineGuard: Asynchronous Dual-Core Hub");
+  Serial.println("BovineGuard: Bulletproof Event Hub");
   Serial.println("======================================");
+
+  pinMode(LORA_NSS, OUTPUT);
+  digitalWrite(LORA_NSS, HIGH);
+  pinMode(SD_CS, OUTPUT);
+  digitalWrite(SD_CS, HIGH);
 
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_NSS);
   LoRa.setSPI(SPI);
@@ -212,35 +232,64 @@ void setup()
   }
   else
   {
-    Serial.println("✅ LoRa Initialized.");
-    LoRa.setSyncWord(0xF3); // Private Network Channel
+    Serial.println("✅ LoRa Initialized on SPI Bus 1.");
+    LoRa.setSyncWord(0xF3);
   }
+
+  delay(1000);
+
+  sdSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
+  if (!SD.begin(SD_CS, sdSPI))
+  {
+    Serial.println("❌ SD Card init failed. Check wiring/format.");
+  }
+  else
+  {
+    Serial.println("✅ SD Card Initialized on SPI Bus 2.");
+    File logFile = SD.open("/bme_log.csv", FILE_APPEND);
+    if (logFile)
+    {
+      if (logFile.size() == 0)
+        logFile.println("SystemUptime_ms,Temperature_C,Humidity_Pct,THI");
+      logFile.close();
+    }
+  }
+
+  delay(1000);
 
   Wire.begin(I2C_SDA, I2C_SCL);
   if (!bme.begin(0x76, &Wire))
+  {
     Serial.println("❌ BME280 not found.");
+  }
   else
+  {
     Serial.println("✅ BME280 Initialized.");
+  }
 
+  // 🛑 Wait 1 second before cellular modem boot
+  delay(1000);
+
+  // 👉 5. INITIALIZE MODEM (UART)
+  Serial.print("⏳ Booting Cellular Modem & searching for tower (this takes up to 60s)... ");
   modemSerial.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
   modem.restart();
 
   if (!modem.waitForNetwork(60000L))
-    return;
-  if (!modem.gprsConnect(apn, "", ""))
-    return;
-  Serial.println("✅ Cellular Connected!");
+  {
+    Serial.println("❌ Network failed to connect! (Check antenna/SIM)");
+  }
+  else if (!modem.gprsConnect(apn, "", ""))
+  {
+    Serial.println("❌ GPRS/Data connection failed! (Check APN: " + String(apn) + ")");
+  }
+  else
+  {
+    Serial.println("✅ Cellular Connected!");
+  }
 
-  // Launch background LoRa listener on Core 0
-  xTaskCreatePinnedToCore(
-      loraListenerTask,
-      "LoRaTask",
-      4096,
-      NULL,
-      1,
-      NULL,
-      0);
-  Serial.println("✅ Background LoRa Listener pinned to Core 0");
+  // 👉 6. ALWAYS LAUNCH LORA LISTENER (Even if 4G is down, we still want to read sensors/SD!)
+  xTaskCreatePinnedToCore(loraListenerTask, "LoRaTask", 4096, NULL, 1, NULL, 0);
 }
 
 void loop()
@@ -248,7 +297,7 @@ void loop()
   unsigned long currentMillis = millis();
 
   // ==========================================
-  // 3. PRINT BME280 DATA EVERY 5 SECONDS
+  // 6. READ AND SD-LOG BME280 EVERY 5 SECONDS
   // ==========================================
   if (currentMillis - previousBmeMillis >= bmeInterval)
   {
@@ -263,88 +312,96 @@ void loop()
     }
     float current_thi = (0.8 * t) + ((h / 100.0) * (t - 14.4)) + 46.4;
 
-    Serial.printf("🌡️ Hub Environment -> Temp: %.1f°C | Hum: %.1f%% | THI: %.1f\n", t, h, current_thi);
+    File logFile = SD.open("/bme_log.csv", FILE_APPEND);
+    if (logFile)
+    {
+      logFile.printf("%lu,%.1f,%.1f,%.1f\n", currentMillis, t, h, current_thi);
+      logFile.close();
+    }
   }
 
   // ==========================================
-  // 4. TRANSMIT SWEPT DATA ON 30s MARK (CORE 1)
+  // 7. EVENT-DRIVEN TRANSMISSION (CORE 1)
   // ==========================================
-  if (currentMillis - previousMillis >= uploadInterval)
+  bool readyToSend = false;
+
+  portENTER_CRITICAL(&telemetryMutex);
+  if (collarReady && cupReady)
   {
-    previousMillis = currentMillis;
+    readyToSend = true;
+  }
+  portEXIT_CRITICAL(&telemetryMutex);
 
-    if (modem.isGprsConnected())
+  // Only execute if BOTH devices have checked in
+  if (readyToSend && modem.isGprsConnected())
+  {
+
+    // Copy data safely and immediately reset flags for the next round
+    portENTER_CRITICAL(&telemetryMutex);
+    String localCowId = currentCowId;
+    float localCollarTemp = collarTemp;
+    float localCollarRum = collarRum;
+    Quarter localLF = qLF, localRF = qRF, localLR = qLR, localRR = qRR;
+
+    collarReady = false;
+    cupReady = false;
+    portEXIT_CRITICAL(&telemetryMutex);
+
+    Serial.println("\n[☁️ SYNC] Both Collar and Cup received! Constructing payload...");
+
+    float tempC = bme.readTemperature();
+    float humidity = bme.readHumidity();
+    if (isnan(tempC))
     {
-      Serial.println("\n[☁️ SYNC] Constructing payload during cellular upload...");
-
-      float tempC = bme.readTemperature();
-      float humidity = bme.readHumidity();
-      if (isnan(tempC))
-      {
-        tempC = 31.0;
-        humidity = 72.0;
-      }
-      float thi = (0.8 * tempC) + ((humidity / 100.0) * (tempC - 14.4)) + 46.4;
-
-      portENTER_CRITICAL(&telemetryMutex);
-      bool localCollarReady = collarReady;
-      CollarTelemetry localCollar = collarData;
-      bool localCupReady[4];
-      SmartCupTelemetry localQuarters[4];
-      for (int i = 0; i < 4; i++)
-      {
-        localCupReady[i] = cupReady[i];
-        localQuarters[i] = quarters[i];
-      }
-      resetDataWindow();
-      portEXIT_CRITICAL(&telemetryMutex);
-
-      String collarJson = localCollarReady
-                              ? "{\"cow_body_temp\":" + String(localCollar.cow_body_temp, 1) + ",\"rumination_delta\":" + String(localCollar.rumination_delta, 1) + "}"
-                              : "{\"cow_body_temp\":null,\"rumination_delta\":null}";
-
-      auto buildQuarter = [](SmartCupTelemetry &q, bool isReady) -> String
-      {
-        if (!isReady)
-        {
-          return "{\"ec\":null,\"ph\":null,\"color\":null,\"viscosity\":null,\"yield_val\":null,\"scc\":null,\"raw_motor_ma\":null}";
-        }
-        return "{\"ec\":" + String(q.ec, 2) +
-               ",\"ph\":" + String(q.ph, 2) +
-               ",\"color\":\"" + classifyMilkColor(q.r, q.g, q.b) +
-               "\",\"viscosity\":" + String(q.viscosity, 1) +
-               ",\"yield_val\":null,\"scc\":null,\"raw_motor_ma\":null}";
-      };
-
-      String postData = "{";
-      postData += "\"cow_id\":\"C-118\",";
-      postData += "\"collar_metrics\":" + collarJson + ",";
-      postData += "\"hub_metrics\":{\"ambient_temp\":" + String(tempC, 1) + ",\"ambient_humidity\":" + String(humidity, 1) + ",\"shed_thi\":" + String(thi, 1) + "},";
-      postData += "\"quarter_readings\":{";
-      postData += "\"LF\":" + buildQuarter(localQuarters[0], localCupReady[0]) + ",";
-      postData += "\"RF\":" + buildQuarter(localQuarters[1], localCupReady[1]) + ",";
-      postData += "\"LR\":" + buildQuarter(localQuarters[2], localCupReady[2]) + ",";
-      postData += "\"RR\":" + buildQuarter(localQuarters[3], localCupReady[3]);
-      postData += "}}";
-
-      Serial.println("📤 Transmitting to AI Server:");
-      Serial.println(postData);
-
-      http.beginRequest();
-      int err = http.post(resource);
-      if (err == 0)
-      {
-        http.sendHeader("Content-Type", "application/json");
-        http.sendHeader("Content-Length", postData.length());
-        http.sendHeader("Connection", "close");
-        http.beginBody();
-        http.print(postData);
-        http.endRequest();
-
-        int statusCode = http.responseStatusCode();
-        Serial.printf("📡 HTTP Response Code: %d\n", statusCode);
-      }
-      http.stop();
+      tempC = 31.0;
+      humidity = 72.0;
     }
+    float thi = (0.8 * tempC) + ((humidity / 100.0) * (tempC - 14.4)) + 46.4;
+
+    auto buildQ = [](Quarter q)
+    {
+      return "{\"ec\":" + String(q.ec, 2) +
+             ",\"ph\":" + String(q.ph, 2) +
+             ",\"color\":\"" + classifyMilkColor(q.r, q.g, q.b) +
+             "\",\"viscosity\":" + String(q.v, 1) + "}";
+    };
+
+    String postData = "{";
+    postData += "\"cow_id\":\"" + localCowId + "\",";
+    postData += "\"collar_metrics\":{\"cow_body_temp\":" + String(localCollarTemp, 1) + ",\"rumination_delta\":" + String(localCollarRum, 1) + "},";
+    postData += "\"hub_metrics\":{\"shed_thi\":" + String(thi, 1) + "},";
+    postData += "\"quarter_readings\":{";
+    postData += "\"LF\":" + buildQ(localLF) + ",";
+    postData += "\"RF\":" + buildQ(localRF) + ",";
+    postData += "\"LR\":" + buildQ(localLR) + ",";
+    postData += "\"RR\":" + buildQ(localRR);
+    postData += "}}";
+
+    Serial.println("📤 Transmitting to AI Server:");
+    Serial.println(postData);
+
+    http.beginRequest();
+    int err = http.post(resource);
+    if (err == 0)
+    {
+      http.sendHeader("Content-Type", "application/json");
+      http.sendHeader("x-device-key", "esp32_hardware_key_1234");
+      http.sendHeader("Bypass-Tunnel-Reminder", "true"); // Instantly bypasses the loca.lt warning page
+      http.sendHeader("Content-Length", postData.length());
+      http.sendHeader("Connection", "close");
+      http.beginBody();
+      http.print(postData);
+      http.endRequest();
+
+      int statusCode = http.responseStatusCode();
+      Serial.printf("📡 HTTP Response Code: %d\n", statusCode);
+
+      if (statusCode > 0)
+      {
+        String response = http.responseBody();
+        Serial.println("📩 Server Reply: " + response);
+      }
+    }
+    http.stop();
   }
 }
