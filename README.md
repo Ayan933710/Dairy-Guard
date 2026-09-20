@@ -2,7 +2,7 @@
   <!-- Place Logo Image Here -->
   <!-- <img src="[LINK_TO_YOUR_LOGO]" width="200" alt="NANDI Logo"> -->
 
-  <h1>NANDI (formerly Dairy-Guard)</h1>
+  <h1>NANDI</h1>
   <p>An AI-powered IoT ecosystem for proactive dairy herd health monitoring, Subclinical Mastitis detection, and yield optimization.</p>
 
   <p>

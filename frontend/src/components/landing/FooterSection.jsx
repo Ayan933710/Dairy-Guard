@@ -46,7 +46,7 @@ export default function FooterSection() {
               <Mail size={14} className="text-sky-600" /> hackcypher2025@gmail.com
             </li>
             <li className="flex items-center gap-2">
-              <Github size={14} className="text-sky-600" /> github.com/hackcypher/nandi
+              <Github size={14} className="text-sky-600" /> github.com/Ayan933710/NANDI
             </li>
             <li className="flex items-center gap-2">
               <MapPin size={14} className="text-sky-600" /> Heritage Institute of Technology, Kolkata
