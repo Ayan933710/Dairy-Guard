@@ -1,0 +1,8 @@
+adafruit/Adafruit ADS1X15 @ ^2.5.0
+adafruit/Adafruit INA219 @ ^1.2.3
+bblanchon/ArduinoJson @ ^7.0.0
+sandeepmistry/LoRa @ ^0.8.0
+adafruit/Adafruit SSD1306 @ ^2.5.17
+adafruit/Adafruit GFX Library @ ^1.11.9
+miguelbalboa/MFRC522 @ ^1.4.10
+adafruit/Adafruit TCS34725 @ ^1.4.4

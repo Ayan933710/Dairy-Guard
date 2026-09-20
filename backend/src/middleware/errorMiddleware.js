@@ -1,5 +1,6 @@
 /** Centralized 404 + error-formatting middleware. Mounted last in app.js. */
 const logger = require('../utils/logger');
+const env = require('../config/env');
 
 function notFound(req, res, next) {
   res.status(404);
@@ -14,7 +15,7 @@ function errorHandler(err, req, res, next) {
   logger.error(err.message, statusCode >= 500 ? err.stack : '');
   res.status(statusCode).json({
     error: err.message || 'Internal server error',
-    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
+    stack: env.NODE_ENV === 'production' ? undefined : err.stack,
   });
 }
 

@@ -3,7 +3,7 @@
  *
  * NOTE: this file used to also export mock HERD / RECOMMENDATIONS /
  * HISTORY_LOG arrays for local prototyping. All dashboard pages now fetch
- * real data from the DairyGuard AI backend (see src/lib/herdApi.js) - this
+ * real data from the NANDI AI backend (see src/lib/herdApi.js) - this
  * file only keeps the small set of UI constants that are still shared
  * across components (risk badge colors, the risk level enum, species list).
  */

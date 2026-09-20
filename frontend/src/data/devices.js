@@ -1,4 +1,4 @@
-// Specs shown on hover, pulled from the BovineGuard/DairyGuard PRD (Section 3).
+// Specs shown on hover, pulled from the BovineGuard/NANDI PRD (Section 3).
 export const DEVICES = {
   collar: {
     id: 'collar',

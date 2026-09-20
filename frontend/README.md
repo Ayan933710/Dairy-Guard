@@ -1,90 +1,45 @@
-# DairyGuard AI — Frontend
+# NANDI Frontend
 
-SIH 2026 · Problem Statement 26109 (Bovine Mastitis Forecasting)
+The frontend interface for the NANDI platform, built to be accessible, responsive, and highly visual. It allows farmers to view real-time telemetry from their cattle and allows veterinarians/administrators to manage cooperatives.
 
-## Setup
+## 🚀 Tech Stack
 
-```bash
-npm create vite@latest dairyguard-ai -- --template react
-cd dairyguard-ai
-npm install three @react-three/fiber @react-three/drei framer-motion recharts lucide-react react-router-dom
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
-```
+- **Framework:** React 18 with Vite
+- **Styling:** Tailwind CSS + Vanilla CSS for dynamic aesthetic overrides
+- **Routing:** React Router v6
+- **State & Context:** React Context API (AuthContext)
+- **Icons:** Lucide React
 
-Drop in the files from this project (they overwrite the Vite defaults), then:
+## 🌟 Key Features
 
-```bash
-npm run dev
-```
+- **Dynamic Dark/Light Mode:** Full integration of a custom Tailwind dark mode, heavily customized with semantic colors to maintain readability.
+- **Role-Based Views:** UI dynamically changes based on `role` (Farmer vs. Cooperative Admin vs. Veterinarian).
+- **Real-Time Indicators:** Visual badges for predicted infections, such as quarter-level Subclinical Mastitis indicators directly mapping to LF, RF, LR, RR lobes.
+- **Predictive Dashboards:** Integrated charts and telemetry feeds for cow temperature, rumination delta, and shed THI.
 
-## Folder structure
+## 🛠️ Setup Instructions
 
-```
-dairyguard-ai/
-├─ index.html · package.json · vite.config.js · tailwind.config.js · postcss.config.js
-├─ src/
-│  ├─ main.jsx            # BrowserRouter root
-│  ├─ App.jsx             # routes: "/" landing, "/dashboard/*" app
-│  ├─ index.css
-│  ├─ data/
-│  │  ├─ devices.js       # collar/cup spec sheets (hover tooltips)
-│  │  ├─ parts.js         # BOM part breakdown + 5-step workflow
-│  │  └─ herd.js          # mock herd, recommendations, history log
-│  ├─ hooks/
-│  │  └─ useScrollProgress.js
-│  ├─ components/
-│  │  ├─ landing/
-│  │  │  ├─ HeroSection.jsx      # Canvas + ScrollControls wrapper
-│  │  │  ├─ HeroScene.jsx        # 3-animal → focus-cow → attach-devices
-│  │  │  ├─ AnimalModel.jsx      # procedural cow/buffalo rig
-│  │  │  ├─ DeviceCollar.jsx / DeviceSmartCup.jsx
-│  │  │  ├─ DeviceTooltip.jsx
-│  │  │  ├─ HeroOverlay.jsx / Navbar.jsx
-│  │  │  ├─ FeaturesSection.jsx  # device viewers + part breakdown + workflow
-│  │  │  └─ FooterSection.jsx    # disclaimers + contact
-│  │  ├─ shared/
-│  │  │  └─ MiniDeviceViewer.jsx # small auto-rotating device viewer
-│  │  └─ dashboard/
-│  │     ├─ DashboardLayout.jsx  # sidebar + topbar shell
-│  │     ├─ HerdOverviewPage.jsx # live herd strip + high-risk board
-│  │     ├─ SpeciesListPage.jsx  # cows / buffaloes listing
-│  │     ├─ AnimalDetailPage.jsx # rotating 3D model + quarters + trend chart
-│  │     ├─ AnalyticsPage.jsx    # recharts: distribution, species avg, THI
-│  │     ├─ PredictionsPage.jsx  # explainable recommendations
-│  │     ├─ HistoryPage.jsx      # event timeline
-│  │     └─ RiskBadge.jsx / RotatingAnimal.jsx
-```
+1. **Install Dependencies:**
+   ```bash
+   cd frontend
+   npm install
+   ```
 
-## Routes
+2. **Environment Variables:**
+   Create a `.env` file in the `frontend` directory:
+   ```env
+   VITE_API_URL=http://localhost:5000/api
+   VITE_SOCKET_URL=http://localhost:5000
+   ```
 
-- `/` — the 3D landing page (Hero → Features & Working → Footer)
-- `/dashboard` — Herd Overview (live review + high-risk board)
-- `/dashboard/species/:species` — list of animals for cow / buffalo
-- `/dashboard/species/:species/:animalId` — animal detail, rotating 3D model,
-  quarter-level readings, 14-day risk trend
-- `/dashboard/analytics` — herd-wide charts
-- `/dashboard/predictions` — recommendations
-- `/dashboard/history` — event log
+3. **Run Development Server:**
+   ```bash
+   npm run dev
+   ```
+   The dashboard will be available at `http://localhost:5173`.
 
-"Enter Platform" on the landing page navigates straight to `/dashboard`.
-
-## Data
-
-Everything under `src/data/` is mocked for the demo (`HERD`, `RECOMMENDATIONS`,
-`HISTORY_LOG`). Swap these for real API calls / MQTT-backed queries against
-the cloud layer described in the PRD (Section 4) without changing any
-component — they all just import from `data/herd.js`.
-
-## Notes on the 3D animals
-
-No external GLTF assets — cow/buffalo are procedurally built from
-primitives in `AnimalModel.jsx` (one rig, per-species proportions/colours/
-horns) and reused both in the landing hero and the dashboard's rotating
-detail view. Swap in sculpted models later via `useGLTF()` without touching
-any scroll or rotation logic.
-
-## Not yet built
-
-Auth (Login/Sign up are front-end prototype flows), and live device
-connectivity (MQTT/WebSocket feed into `HERD` in place of the mock array).
+4. **Production Build:**
+   ```bash
+   npm run build
+   ```
+   The static files will be generated in the `dist` folder.

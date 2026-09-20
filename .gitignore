@@ -1,4 +1,4 @@
-﻿venv/
+venv/
 backend/venv/
 **/venv/
 node_modules/
@@ -9,3 +9,4 @@ __pycache__/
 dist/
 build/
 .next/
+*.exe

@@ -40,11 +40,9 @@ async function query(text, params) {
     }
     return result;
   } catch (error) {
-    if (env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.warn('[db] Query failed; returning empty result set instead of crashing the request.', error.message);
-    }
-    return { rows: [], rowCount: 0, fields: [] };
+    // eslint-disable-next-line no-console
+    console.error('[db] Query failed:', error.message, { text });
+    throw error; // Propagate to error middleware — never silently swallow DB errors
   }
 }
 

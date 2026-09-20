@@ -5,7 +5,7 @@ export default function NeuralWeb({ className = 'neural-web' }) {
   return (
     <ParticlesProvider init={loadSlim}>
       <Particles
-        id="dairyguard-neural-web"
+        id="nandi-neural-web"
         className={className}
         options={{
           fullScreen: { enable: false },

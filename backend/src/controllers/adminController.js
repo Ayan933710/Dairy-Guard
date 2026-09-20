@@ -42,6 +42,7 @@ const getOverview = asyncHandler(async (req, res) => {
 const createAccount = asyncHandler(async (req, res) => {
   const { full_name, email, password, role, phone, farm_name, farm_state, farm_district, vet_state, vet_district, registration_number } = req.body;
   if (!full_name || !email || !password || !role) return res.status(400).json({ error: 'full_name, email, password and role are required.' });
+  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
   if (!['farmer', 'vet', 'cooperative_admin'].includes(role)) return res.status(400).json({ error: 'Only farmer, vet and cooperative_admin accounts can be created here.' });
   if (role === 'vet' && (!vet_state || !vet_district || !registration_number)) return res.status(400).json({ error: 'Vet state, district and registration number are required.' });
   const normalizedEmail = email.trim().toLowerCase();

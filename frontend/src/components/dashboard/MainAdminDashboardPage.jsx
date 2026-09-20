@@ -1,15 +1,16 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Plus, RefreshCw, ShieldCheck, Trash2, UserCheck, UserX, XCircle } from 'lucide-react';
 import { api } from '../../lib/apiClient.js';
 import { ErrorState, LoadingState } from '../shared/AsyncState.jsx';
 import LocationLink from '../shared/LocationLink.jsx';
 import DistrictMap from '../shared/DistrictMap.jsx';
+import { useLanguage } from '../../hooks/useLanguage.jsx';
 
 const STAT_LABELS = [
-  ['farms', 'Total farms'],
-  ['animals', 'Total animals'],
-  ['users', 'Registered accounts'],
-  ['highRiskAnimals', 'High-risk animals'],
+  ['farms', 'totalFarms'],
+  ['animals', 'totalAnimals'],
+  ['users', 'registeredAccounts'],
+  ['highRiskAnimals', 'highRiskAnimals'],
 ];
 
 const INDIAN_STATES = [
@@ -62,6 +63,7 @@ const STATE_CENTERS = {
 };
 
 export default function MainAdminDashboardPage({ includeVetRequests = true, showOnlyAnimals = false, showRegionalAnalysis = false }) {
+  const { t } = useLanguage();
   const [overview, setOverview] = useState(null);
   const [animals, setAnimals] = useState([]);
   const [error, setError] = useState('');
@@ -231,7 +233,7 @@ export default function MainAdminDashboardPage({ includeVetRequests = true, show
     data: farm,
   })), [regionalFarms]);
 
-  const pageHeaderTitle = showOnlyAnimals ? 'Animal' : showRegionalAnalysis ? 'Regional Analysis' : 'Account overview';
+  const pageHeaderTitle = showOnlyAnimals ? t('animal') : showRegionalAnalysis ? t('regionalAnalysis') : t('accountOverview');
   const pageHeaderSubtitle = showOnlyAnimals ? 'Global animal registry for every registered animal across the platform.' : showRegionalAnalysis ? 'State-level monitoring of hub risk signals across the region.' : 'Full visibility across farms, animals, accounts, and veterinary approvals.';
 
   if (error && !overview) return <ErrorState message={error} onRetry={loadOverview} />;
@@ -241,18 +243,18 @@ export default function MainAdminDashboardPage({ includeVetRequests = true, show
     <div className="admin-console admin-overview space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="dashboard-kicker">Main Administrator</p>
+          <p className="dashboard-kicker">{t('mainAdministrator')}</p>
           <h1 className="dashboard-page-title">{pageHeaderTitle}</h1>
           <p className="mt-1 text-sm text-theme-text-muted">{pageHeaderSubtitle}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {!showOnlyAnimals && !showRegionalAnalysis && (
             <button type="button" className="dashboard-primary-button" onClick={() => setShowCreate((current) => !current)}>
-              <Plus size={15} /> Add account or farm
+              <Plus size={15} /> {t('addAccountOrFarm')}
             </button>
           )}
           <button type="button" className="dashboard-secondary-button" onClick={loadOverview}>
-            <RefreshCw size={15} /> Refresh
+            <RefreshCw size={15} /> {t('refresh')}
           </button>
         </div>
       </header>
@@ -265,13 +267,13 @@ export default function MainAdminDashboardPage({ includeVetRequests = true, show
           <div className="dashboard-panel">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="dashboard-kicker">Regional risk map</p>
-                <h2 className="dashboard-section-title">Hub monitoring by state</h2>
+                <p className="dashboard-kicker">{t('regionalRiskMap')}</p>
+                <h2 className="dashboard-section-title">{t('hubMonitoringByState')}</h2>
               </div>
               <label className="flex flex-col gap-2 text-sm text-theme-text-muted">
-                <span>State</span>
+                <span>{t('stateLabel')}</span>
                 <select value={selectedState} onChange={(event) => setSelectedState(event.target.value)} className="auth-input-wrap min-w-[220px]">
-                  {availableStates.length ? availableStates.map((state) => <option key={state} value={state}>{state}</option>) : <option value="">No states available</option>}
+                  {availableStates.length ? availableStates.map((state) => <option key={state} value={state}>{state}</option>) : <option value="">{t('noStatesAvailable')}</option>}
                 </select>
               </label>
             </div>
@@ -352,7 +354,7 @@ export default function MainAdminDashboardPage({ includeVetRequests = true, show
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {STAT_LABELS.map(([key, label]) => (
               <section className={`dashboard-panel admin-overview-stat-card admin-overview-stat-card--${key}`} key={key}>
-                <p className="text-xs text-theme-text-muted">{label}</p>
+                <p className="text-xs text-theme-text-muted">{t(label)}</p>
                 <p className="mt-2 font-display text-3xl text-theme-text-dark">{overview.stats[key]}</p>
               </section>
             ))}
@@ -448,12 +450,12 @@ export default function MainAdminDashboardPage({ includeVetRequests = true, show
           </div>
           <form className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" onSubmit={createAnimal}>
             <select className="auth-input-wrap" required value={animalForm.owner_id} onChange={(event) => setAnimalForm({ ...animalForm, owner_id: event.target.value })}>
-              <option value="">Select farm owner</option>
+              <option value="">{t('selectFarmOwner')}</option>
               {overview.farms.map((farm) => <option key={farm.id} value={farm.id}>{farm.farm_name || farm.full_name}</option>)}
             </select>
-            <input className="auth-input-wrap" required placeholder="Animal name" value={animalForm.name} onChange={(event) => setAnimalForm({ ...animalForm, name: event.target.value })} />
-            <input className="auth-input-wrap" required placeholder="Display tag" value={animalForm.display_tag} onChange={(event) => setAnimalForm({ ...animalForm, display_tag: event.target.value })} />
-            <input className="auth-input-wrap" required placeholder="8-15 character RFID" pattern="[A-Za-z0-9]{8,15}" maxLength="15" value={animalForm.rfid_tag} onChange={(event) => setAnimalForm({ ...animalForm, rfid_tag: event.target.value })} />
+            <input className="auth-input-wrap" required placeholder={t('animalName')} value={animalForm.name} onChange={(event) => setAnimalForm({ ...animalForm, name: event.target.value })} />
+            <input className="auth-input-wrap" required placeholder={t('displayTag')} value={animalForm.display_tag} onChange={(event) => setAnimalForm({ ...animalForm, display_tag: event.target.value })} />
+            <input className="auth-input-wrap" required placeholder={t('charRfid')} pattern="[A-Za-z0-9]{8,15}" maxLength="15" value={animalForm.rfid_tag} onChange={(event) => setAnimalForm({ ...animalForm, rfid_tag: event.target.value })} />
             <select className="auth-input-wrap" value={animalForm.species} onChange={(event) => setAnimalForm({ ...animalForm, species: event.target.value })}>
               <option value="cow">Cow</option>
               <option value="buffalo">Buffalo</option>
@@ -467,11 +469,11 @@ export default function MainAdminDashboardPage({ includeVetRequests = true, show
           <table className="mt-4 w-full min-w-[820px] text-left text-sm">
             <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-theme-text-muted">
               <tr>
-                <th className="py-3">Animal</th>
-                <th>Farm</th>
-                <th>Species</th>
-                <th>RFID</th>
-                <th>Risk</th>
+                <th className="py-3">{t('animal')}</th>
+                <th>{t('farmLabel')}</th>
+                <th>{t('species')}</th>
+                <th>{t('rfid')}</th>
+                <th>{t('risk')}</th>
                 <th />
               </tr>
             </thead>
@@ -485,7 +487,7 @@ export default function MainAdminDashboardPage({ includeVetRequests = true, show
                   <td>{animal.current_risk_level || 'No snapshot'}</td>
                   <td className="text-right">
                     <button type="button" className="dashboard-secondary-button" disabled={busy === animal.id} onClick={() => { setAnimalToRemove(animal); setRemovePhrase(''); }}>
-                      <Trash2 size={15} /> Remove
+                      <Trash2 size={15} /> {t('remove')}
                     </button>
                   </td>
                 </tr>
@@ -501,8 +503,8 @@ export default function MainAdminDashboardPage({ includeVetRequests = true, show
           <section className="dashboard-modal max-w-lg" role="dialog" aria-modal="true" aria-labelledby="admin-remove-animal-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="dashboard-kicker text-red-700">Permanent action</p>
-                <h2 id="admin-remove-animal-title" className="font-display text-2xl text-theme-text-dark">Remove animal</h2>
+                <p className="dashboard-kicker text-red-700">{t('permanentAction')}</p>
+                <h2 id="admin-remove-animal-title" className="font-display text-2xl text-theme-text-dark">{t('removeAnimalConfirm')}</h2>
               </div>
               <button type="button" className="icon-button" onClick={() => setAnimalToRemove(null)} aria-label="Close remove animal dialog">×</button>
             </div>
@@ -518,7 +520,7 @@ export default function MainAdminDashboardPage({ includeVetRequests = true, show
             <input className="auth-input-wrap mt-2 w-full" value={removePhrase} onChange={(event) => setRemovePhrase(event.target.value)} placeholder="Type REMOVE" autoComplete="off" />
             <div className="mt-5 flex justify-end gap-3">
               <button type="button" className="dashboard-secondary-button" onClick={() => setAnimalToRemove(null)}>Cancel</button>
-              <button type="button" className="dashboard-primary-button bg-red-700 hover:bg-red-800" disabled={removePhrase.trim().toUpperCase() !== 'REMOVE'} onClick={() => removeAnimal(animalToRemove)}><Trash2 size={15} /> Remove animal</button>
+              <button type="button" className="dashboard-primary-button bg-red-700 hover:bg-red-800" disabled={removePhrase.trim().toUpperCase() !== 'REMOVE'} onClick={() => removeAnimal(animalToRemove)}><Trash2 size={15} /> {t('removeAnimalConfirm')}</button>
             </div>
           </section>
         </div>
@@ -529,8 +531,8 @@ export default function MainAdminDashboardPage({ includeVetRequests = true, show
           <section className="dashboard-modal max-w-lg" role="dialog" aria-modal="true" aria-labelledby="admin-remove-user-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="dashboard-kicker text-red-700">Permanent action</p>
-                <h2 id="admin-remove-user-title" className="font-display text-2xl text-theme-text-dark">Remove account</h2>
+                <p className="dashboard-kicker text-red-700">{t('permanentAction')}</p>
+                <h2 id="admin-remove-user-title" className="font-display text-2xl text-theme-text-dark">{t('removeAccountConfirm')}</h2>
               </div>
               <button type="button" className="icon-button" onClick={() => setUserToRemove(null)} aria-label="Close remove account dialog">×</button>
             </div>
@@ -544,7 +546,7 @@ export default function MainAdminDashboardPage({ includeVetRequests = true, show
             <input className="auth-input-wrap mt-2 w-full" value={userRemovePhrase} onChange={(event) => setUserRemovePhrase(event.target.value)} placeholder="Type REMOVE" autoComplete="off" />
             <div className="mt-5 flex justify-end gap-3">
               <button type="button" className="dashboard-secondary-button" onClick={() => setUserToRemove(null)}>Cancel</button>
-              <button type="button" className="dashboard-primary-button bg-red-700 hover:bg-red-800" disabled={userRemovePhrase.trim().toUpperCase() !== 'REMOVE'} onClick={() => removeUser(userToRemove)}><Trash2 size={15} /> Remove account</button>
+              <button type="button" className="dashboard-primary-button bg-red-700 hover:bg-red-800" disabled={userRemovePhrase.trim().toUpperCase() !== 'REMOVE'} onClick={() => removeUser(userToRemove)}><Trash2 size={15} /> {t('removeAccountConfirm')}</button>
             </div>
           </section>
         </div>

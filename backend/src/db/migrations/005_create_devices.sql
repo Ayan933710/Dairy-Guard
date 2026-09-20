@@ -1,7 +1,7 @@
 -- ============================================================
 -- 005_create_devices.sql
 -- Device registry: every physical ESP32-S3 Smart Collar / Smart Cup /
--- DairyGuard Hub in the field, so the ingestion route can validate
+-- NANDI Hub in the field, so the ingestion route can validate
 -- device_id and the dashboard can show "last seen" / battery health.
 -- ============================================================
 

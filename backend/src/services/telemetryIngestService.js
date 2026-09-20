@@ -3,7 +3,7 @@
  * (routes/telemetryRoutes.js, for devices that can reach the internet
  * directly / for testing with curl or Postman) AND the MQTT bridge
  * (services/mqttBridge.js, for ESP32-S3 devices that publish over
- * LoRa -> DairyGuard Hub -> MQTT).
+ * LoRa -> NANDI Hub -> MQTT).
  *
  * Keeping this logic in one place guarantees identical behaviour
  * (validation, DB writes, risk scoring, socket broadcast) no matter

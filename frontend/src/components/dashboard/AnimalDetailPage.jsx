@@ -86,6 +86,7 @@ export default function AnimalDetailPage() {
           ph: source.ph ?? source.ph_value ?? source.phValue ?? null,
           color: source.color ?? source.colour ?? source.color_code ?? '—',
           viscosity: source.viscosity ?? source.viscosity_value ?? source.viscosityValue ?? null,
+          is_infected: qData.ai_prediction === 'subclinical' || qData.risk_pct >= 50,
         }
       })
     : detail.quarters.map((q) => ({
@@ -94,6 +95,7 @@ export default function AnimalDetailPage() {
         ph: q.ph ?? q.phValue ?? null,
         color: q.color ?? q.colour ?? q.colorCode ?? '—',
         viscosity: q.viscosity ?? q.viscosityValue ?? null,
+        is_infected: false,
       }));
 
   const activeTrend = livePrediction?.['30_day_trend']
@@ -103,7 +105,6 @@ export default function AnimalDetailPage() {
       }))
     : trend;
 
-  // Added dynamic threshold logic here
   const getDynamicRecommendation = (score) => {
     if (score >= 75) return "High Risk: Isolate cow immediately, hold milk, and contact a veterinarian.";
     if (score >= 50) return "Moderate Risk: Divert milk and perform a California Mastitis Test (CMT).";
@@ -111,7 +112,6 @@ export default function AnimalDetailPage() {
     return "Low Risk: All metrics normal. Continue standard milking routine.";
   };
 
-  // Replaced static backend string with dynamic local logic
   const activeRecommendation = livePrediction
     ? {
         profile: livePrediction.pathogen_profile || 'AI Quarter-Level Analysis',
@@ -251,6 +251,11 @@ export default function AnimalDetailPage() {
                   <div key={q.quarter} className="rounded-lg border border-milk/10 bg-night-card/60 p-4 flex flex-col">
                     <div className="flex justify-between items-center mb-4">
                       <span className="font-display text-sm text-milk">{q.quarter}</span>
+                      {q.is_infected && (
+                        <span className="rounded bg-red-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-400">
+                          Infected
+                        </span>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-sm">

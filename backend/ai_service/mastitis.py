@@ -299,21 +299,6 @@ def predict_on_spot(quarter_readings: list, shed_thi: float, model_path: str = M
     return results
 
 
-# ---------------------------------------------------------------------------
-# Demo / self-test using SYNTHETIC data -- NOT real data. Exists only to
-# prove the pipeline runs end-to-end. Replace with real quarter-level
-# SCC/CMT-labeled data before drawing any conclusions.
-#
-# Simulates the real-world scenario directly: for "mastitis" sessions, ONE
-# randomly chosen quarter gets elevated pH/EC/viscosity while the other 3
-# stay at healthy baseline -- this is what makes IQD features valuable and
-# demonstrates why a composite/averaged reading would dilute and miss it.
-# pH/EC ranges taken from your provided threshold tables (species-combined,
-# since species isn't a feature yet). motor_ma baseline (~21 mA healthy) is
-# taken from your actual hardware's observed readings on normal samples --
-# the mastitis-elevated increase on top of that is still a guess (no real
-# reference point for that yet), so treat that specific delta as rough.
-# ---------------------------------------------------------------------------
 def _generate_synthetic_demo_data(n_sessions=300, random_state=42) -> pd.DataFrame:
     rng = np.random.default_rng(random_state)
     rows = []
@@ -368,18 +353,16 @@ if __name__ == "__main__":
         {"quarter": "RH", "ph": 6.6, "ec": 4.9, "motor_ma": 21, "color": "normal"},
     ]
 
-    # --- RandomForest run (always available) ---
-    rf_model_path = train_model(demo_csv, model_type="random_forest").steps  # trains + saves
+    rf_model_path = train_model(demo_csv, model_type="random_forest").steps
     rf_model_path = "mastitis_model_quarter_random_forest.joblib"
-    print("\n=== RandomForest: example on-spot prediction ===")
+    print("\nRandomForest: example on-spot prediction")
     for q, r in predict_on_spot(example_session, shed_thi=72.0, model_path=rf_model_path).items():
         print(q, "->", r)
 
-    # --- XGBoost run (only if installed) ---
     if _XGBOOST_AVAILABLE:
         xgb_model_path = "mastitis_model_quarter_xgboost.joblib"
         train_model(demo_csv, model_type="xgboost")
-        print("\n=== XGBoost: example on-spot prediction ===")
+        print("\nXGBoost: example on-spot prediction")
         for q, r in predict_on_spot(example_session, shed_thi=72.0, model_path=xgb_model_path).items():
             print(q, "->", r)
     else:

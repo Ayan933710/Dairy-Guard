@@ -1,5 +1,5 @@
 /**
- * Thin fetch() wrapper around the DairyGuard AI backend.
+ * Thin fetch() wrapper around the NANDI AI backend.
  *
  * - Reads the API base URL from VITE_API_URL (see .env.example).
  * - Automatically attaches the stored JWT as a Bearer token.
@@ -18,7 +18,7 @@ const DEFAULT_API_URLS = [
 ].filter(Boolean).map((value) => value.replace(/\/+$/, ''));
 
 const API_URL = DEFAULT_API_URLS[0] || 'http://localhost:5000/api';
-const TOKEN_STORAGE_KEY = 'dairyguard_token';
+const TOKEN_STORAGE_KEY = 'nandi_token';
 const REQUEST_TIMEOUT_MS = 10000;
 
 export function getToken() {
@@ -63,7 +63,7 @@ async function request(path, { method = 'GET', body, headers = {}, auth = true }
 
       if (!response.ok) {
         if (response.status === 401 && auth) {
-          window.dispatchEvent(new CustomEvent('dairyguard:unauthorized'));
+          window.dispatchEvent(new CustomEvent('nandi:unauthorized'));
         }
         throw new Error(payload?.error || `Request failed with status ${response.status}`);
       }
@@ -71,10 +71,10 @@ async function request(path, { method = 'GET', body, headers = {}, auth = true }
       return payload;
     } catch (networkErr) {
       if (networkErr.name === 'AbortError') {
-        lastNetworkError = new Error(`The DairyGuard backend did not respond within ${REQUEST_TIMEOUT_MS / 1000} seconds.`);
+        lastNetworkError = new Error(`The NANDI backend did not respond within ${REQUEST_TIMEOUT_MS / 1000} seconds.`);
       } else if (networkErr.message?.includes('Failed to fetch') || networkErr.name === 'TypeError') {
         lastNetworkError = new Error(
-          `Could not reach the DairyGuard backend at ${baseUrl}. Is the server running? (${networkErr.message})`
+          `Could not reach the NANDI backend at ${baseUrl}. Is the server running? (${networkErr.message})`
         );
       } else {
         throw networkErr;
@@ -85,12 +85,13 @@ async function request(path, { method = 'GET', body, headers = {}, auth = true }
     }
   }
 
-  throw lastNetworkError || new Error(`Could not reach the DairyGuard backend. Is the server running?`);
+  throw lastNetworkError || new Error(`Could not reach the NANDI backend. Is the server running?`);
 }
 
 export const api = {
   get: (path, opts) => request(path, { ...opts, method: 'GET' }),
   post: (path, body, opts) => request(path, { ...opts, method: 'POST', body }),
+  put: (path, body, opts) => request(path, { ...opts, method: 'PUT', body }),
   patch: (path, body, opts) => request(path, { ...opts, method: 'PATCH', body }),
   del: (path, opts) => request(path, { ...opts, method: 'DELETE' }),
 };

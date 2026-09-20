@@ -108,4 +108,13 @@ async function updateVetDistrict(userId, district) {
   return rows[0] || null;
 }
 
-module.exports = { create, findByEmail, findByIdentifier, findById, findVetsByDistrict, listAll, setActive, removeById, updateHubLocation, updateVetDistrict, generateFarmId };
+async function updateProfile(userId, { full_name, phone, farm_name, vet_designation, vet_district }) {
+  const { rows } = await query(
+    `UPDATE users SET full_name = COALESCE($2, full_name), phone = COALESCE($3, phone), farm_name = COALESCE($4, farm_name), vet_designation = COALESCE($5, vet_designation), vet_district = COALESCE($6, vet_district), updated_at = now()
+      WHERE id = $1 RETURNING ${PUBLIC_COLUMNS}`,
+    [userId, full_name, phone, farm_name, vet_designation, vet_district]
+  );
+  return rows[0] || null;
+}
+
+module.exports = { create, findByEmail, findByIdentifier, findById, findVetsByDistrict, listAll, setActive, removeById, updateHubLocation, updateVetDistrict, generateFarmId, updateProfile };

@@ -19,6 +19,13 @@ body,
   scroll-behavior: smooth;
 }
 
+[data-theme="dark"] html,
+[data-theme="dark"] body,
+[data-theme="dark"] #root {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
 .landing-page {
   position: relative;
   overflow: hidden;
@@ -490,6 +497,11 @@ body,
   box-shadow: 0 12px 28px rgba(31, 72, 94, 0.08);
   padding: 1.2rem 1.1rem;
 }
+[data-theme="dark"] .dashboard-panel {
+  border: 1px solid rgba(51, 65, 85, 0.7);
+  background: rgba(30, 41, 59, 0.78);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+}
 .admin-overview-stat-card {
   min-height: 128px;
   padding: 1rem 1.1rem 1.15rem;
@@ -498,21 +510,36 @@ body,
   background: linear-gradient(135deg, #f4fbff 0%, #edf7ff 100%);
   box-shadow: 0 10px 24px rgba(14, 116, 144, 0.08);
 }
+[data-theme="dark"] .admin-overview-stat-card {
+  border: 1px solid #334155;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
 .admin-overview-stat-card .text-xs {
   color: #4e6b81;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-weight: 700;
 }
+[data-theme="dark"] .admin-overview-stat-card .text-xs {
+  color: #94a3b8;
+}
 .admin-overview-stat-card .font-display {
   font-size: clamp(2rem, 2vw, 2.6rem);
   line-height: 1.1;
   color: #0f172a;
 }
+[data-theme="dark"] .admin-overview-stat-card .font-display {
+  color: #f8fafc;
+}
 .admin-overview-stat-card--farms { background: linear-gradient(135deg, #edfafd 0%, #f5fbff 100%); border-color: #9ccfe1; }
 .admin-overview-stat-card--animals { background: linear-gradient(135deg, #eef6ff 0%, #f5f9ff 100%); border-color: #bfd4f3; }
 .admin-overview-stat-card--users { background: linear-gradient(135deg, #effcf7 0%, #f6fffd 100%); border-color: #afd7c3; }
 .admin-overview-stat-card--highRiskAnimals { background: linear-gradient(135deg, #fff8f3 0%, #fffaf5 100%); border-color: #efc9a4; }
+[data-theme="dark"] .admin-overview-stat-card--farms { background: linear-gradient(135deg, rgba(14,165,233,0.1) 0%, rgba(14,165,233,0.05) 100%); border-color: rgba(14,165,233,0.3); }
+[data-theme="dark"] .admin-overview-stat-card--animals { background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(59,130,246,0.05) 100%); border-color: rgba(59,130,246,0.3); }
+[data-theme="dark"] .admin-overview-stat-card--users { background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%); border-color: rgba(16,185,129,0.3); }
+[data-theme="dark"] .admin-overview-stat-card--highRiskAnimals { background: linear-gradient(135deg, rgba(249,115,22,0.1) 0%, rgba(249,115,22,0.05) 100%); border-color: rgba(249,115,22,0.3); }
 .admin-overview-section {
   border-radius: 18px;
   border: 1px solid #c4dff0;

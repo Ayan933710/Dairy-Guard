@@ -11,6 +11,7 @@ const fadeUp = {
 };
 
 function PartRow({ part }) {
+  const { t } = useLanguage();
   return (
     <motion.div
       variants={fadeUp}
@@ -21,25 +22,26 @@ function PartRow({ part }) {
       <div className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.45)]" />
       <div>
         <p className="font-display text-sm text-theme-text-dark">
-          {part.name} <span className="text-theme-text-muted">· {part.role}</span>
+          {t(part.name)} <span className="text-theme-text-muted">· {t(part.role)}</span>
         </p>
-        <p className="mt-1 text-sm leading-relaxed text-theme-text-muted">{part.detail}</p>
+        <p className="mt-1 text-sm leading-relaxed text-theme-text-muted">{t(part.detail)}</p>
       </div>
     </motion.div>
   );
 }
 
 function DevicePanel({ title, subtitle, viewerType, parts }) {
+  const { t } = useLanguage();
   const callouts = viewerType === 'collar'
-    ? [['MPU6050', 'Motility'], ['LoRa radio', '3–5 km range'], ['Solar cell', '195-day reserve']]
+    ? [[t('mpu6050'), t('motility')], [t('loraRadio'), t('loraRange')], [t('solarCell'), t('solarReserve')]]
     : viewerType === 'cup'
-      ? [['EC + pH', 'Chemistry'], ['IR probe', 'Temperature'], ['RFID', 'Animal ID']]
-      : [['LoRa', 'Signal bridge'], ['Wi-Fi + 4G', 'Cloud sync'], ['250+', 'Devices connected']];
+      ? [[t('ecPh'), t('chemistry')], [t('irProbe'), t('temperature')], [t('rfid'), t('animalId')]]
+      : [[t('lora'), t('signalBridge')], [t('wifi4g'), t('cloudSync')], [t('devicesConnected'), t('devicesConnectedCount')]];
   const flow = viewerType === 'collar'
-    ? ['Sense motion + temperature', 'Compress a live behaviour signal', 'Broadcast over LoRa']
+    ? [t('collarFlow1'), t('collarFlow2'), t('collarFlow3')]
     : viewerType === 'cup'
-      ? ['Identify the animal by RFID', 'Sample all four quarters', 'Return chemistry + rheology']
-      : ['Collect collar and cup packets', 'Buffer readings at the edge', 'Sync one herd timeline'];
+      ? [t('cupFlow1'), t('cupFlow2'), t('cupFlow3')]
+      : [t('hubFlow1'), t('hubFlow2'), t('hubFlow3')];
 
   return (
     <div className="device-feature-panel">
@@ -102,8 +104,8 @@ export default function FeaturesSection() {
       
     },
     hub: {
-      title: t('dairyGuardHub'),
-      subtitle: t('dairyGuardHubDescription'),
+      title: t('nandiHub'),
+      subtitle: t('nandiHubDescription'),
       parts: HUB_PARTS,
       
     },
@@ -128,7 +130,7 @@ export default function FeaturesSection() {
         </p>
       </motion.div>
 
-      <div className="device-switcher mx-auto mt-8 max-w-5xl" role="tablist" aria-label={t('dairyGuardDevices')}>
+      <div className="device-switcher mx-auto mt-8 max-w-5xl" role="tablist" aria-label={t('nandiDevices')}>
         {Object.entries(devices).map(([key, device], index) => (
           <button
             key={key}
@@ -180,8 +182,8 @@ export default function FeaturesSection() {
               className="feature-step min-h-60 rounded-lg border border-slate-200 bg-theme-bg-card p-6 shadow-sm"
             >
               <span className="font-display text-xl text-sky-600">{s.step}</span>
-              <p className="mt-2 font-display text-sm text-theme-text-dark">{s.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-theme-text-muted">{s.detail}</p>
+              <p className="mt-2 font-display text-sm text-theme-text-dark">{t(s.title)}</p>
+              <p className="mt-1 text-xs leading-relaxed text-theme-text-muted">{t(s.detail)}</p>
             </motion.div>
           ))}
         </div>

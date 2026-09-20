@@ -1,0 +1,6 @@
+arduino-libraries/ArduinoHttpClient @ ^0.5.0
+vshymanskyy/TinyGSM @ ^0.11.7
+sandeepmistry/LoRa @ ^0.8.0
+adafruit/Adafruit BME280 Library @ ^2.2.4
+bblanchon/ArduinoJson @ ^6.21.5
+adafruit/Adafruit Unified Sensor @ ^1.1.14

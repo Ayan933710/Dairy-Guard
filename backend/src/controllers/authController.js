@@ -19,6 +19,9 @@ const register = asyncHandler(async (req, res) => {
   if (!full_name || !password || !phone) {
     return res.status(400).json({ error: 'full_name, phone and password are required.' });
   }
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+  }
   if (!VALID_ROLES.includes(role)) {
     return res.status(400).json({ error: `role must be one of: ${VALID_ROLES.join(', ')}` });
   }
@@ -94,4 +97,13 @@ const me = asyncHandler(async (req, res) => {
   res.json({ user: req.user });
 });
 
-module.exports = { register, login, me };
+const updateProfile = asyncHandler(async (req, res) => {
+  const { full_name, phone, farm_name, vet_designation, vet_district } = req.body;
+  const user = await userModel.findByIdentifier(req.user.email);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  
+  const updatedUser = await userModel.updateProfile(user.id, { full_name, phone, farm_name, vet_designation, vet_district });
+  res.json({ user: updatedUser });
+});
+
+module.exports = { register, login, me, updateProfile };

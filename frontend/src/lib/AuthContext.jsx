@@ -37,8 +37,8 @@ export function AuthProvider({ children }) {
       setStatus('guest');
     }
 
-    window.addEventListener('dairyguard:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('dairyguard:unauthorized', handleUnauthorized);
+    window.addEventListener('nandi:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('nandi:unauthorized', handleUnauthorized);
   }, []);
 
   const login = useCallback(async ({ identifier, password }) => {
@@ -61,14 +61,19 @@ export function AuthProvider({ children }) {
     return newUser;
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Backend unreachable — still proceed with local logout
+    }
     setToken(null);
     setUser(null);
     setStatus('guest');
   }, []);
 
   const value = useMemo(
-    () => ({ user, status, isAuthenticated: status === 'authenticated', login, register, logout }),
+    () => ({ user, setUser, status, isAuthenticated: status === 'authenticated', login, register, logout }),
     [user, status, login, register, logout]
   );
 
