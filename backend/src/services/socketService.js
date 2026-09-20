@@ -32,12 +32,16 @@ function initSocket(httpServer) {
   io.use((socket, next) => {
     try {
       const token = socket.handshake.auth?.token || socket.handshake.query?.token;
-      if (!token) return next(); // allow anonymous connections (e.g. public landing page widgets)
+      if (!token) {
+        // Allow anonymous connections for public features (e.g. landing page)
+        return next();
+      }
       const decoded = verifyToken(token);
       socket.user = decoded; // { sub, role, email }
       return next();
     } catch (err) {
-      return next(); // invalid token -> connect anonymously rather than reject
+      // Invalid/expired token → reject the connection
+      return next(new Error('Authentication failed: invalid or expired token.'));
     }
   });
 

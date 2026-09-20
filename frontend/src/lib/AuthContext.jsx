@@ -37,8 +37,8 @@ export function AuthProvider({ children }) {
       setStatus('guest');
     }
 
-    window.addEventListener('dairyguard:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('dairyguard:unauthorized', handleUnauthorized);
+    window.addEventListener('nandi:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('nandi:unauthorized', handleUnauthorized);
   }, []);
 
   const login = useCallback(async ({ identifier, password }) => {
@@ -49,10 +49,10 @@ export function AuthProvider({ children }) {
     return loggedInUser;
   }, []);
 
-  const register = useCallback(async ({ full_name, email, password, role, phone, farm_name, vet_state, vet_district, registration_number, preferred_language }) => {
+  const register = useCallback(async ({ full_name, email, password, role, phone, farm_name, vet_state, vet_district, vet_designation, registration_number, preferred_language }) => {
     const { token, user: newUser } = await api.post(
       '/auth/register',
-      { full_name, email, password, role, phone, farm_name, vet_state, vet_district, registration_number, preferred_language },
+      { full_name, email, password, role, phone, farm_name, vet_state, vet_district, vet_designation, registration_number, preferred_language },
       { auth: false }
     );
     setToken(token);
@@ -61,14 +61,19 @@ export function AuthProvider({ children }) {
     return newUser;
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Backend unreachable — still proceed with local logout
+    }
     setToken(null);
     setUser(null);
     setStatus('guest');
   }, []);
 
   const value = useMemo(
-    () => ({ user, status, isAuthenticated: status === 'authenticated', login, register, logout }),
+    () => ({ user, setUser, status, isAuthenticated: status === 'authenticated', login, register, logout }),
     [user, status, login, register, logout]
   );
 

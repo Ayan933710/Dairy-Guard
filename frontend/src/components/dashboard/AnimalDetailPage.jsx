@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../hooks/useLanguage.jsx';
 import { openNearbyVetSearch } from '../../lib/vetLocator.js';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { RefreshCw, MapPin, Trash2 } from 'lucide-react';
+import { RefreshCw, MapPin, Trash2, X } from 'lucide-react';
 import { riskColor } from '../../data/herd.js';
 import RiskBadge from './RiskBadge.jsx';
 import RotatingAnimal from './RotatingAnimal.jsx';
@@ -20,6 +20,8 @@ export default function AnimalDetailPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [runError, setRunError] = useState('');
   const [removeError, setRemoveError] = useState('');
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [removePhrase, setRemovePhrase] = useState('');
   const [livePrediction, setLivePrediction] = useState(null);
 
   const { data: detail, loading, error, refetch } = useFetch(() => fetchAnimalDetail(animalId), [animalId]);
@@ -84,6 +86,7 @@ export default function AnimalDetailPage() {
           ph: source.ph ?? source.ph_value ?? source.phValue ?? null,
           color: source.color ?? source.colour ?? source.color_code ?? '—',
           viscosity: source.viscosity ?? source.viscosity_value ?? source.viscosityValue ?? null,
+          is_infected: qData.ai_prediction === 'subclinical' || qData.risk_pct >= 50,
         }
       })
     : detail.quarters.map((q) => ({
@@ -92,6 +95,7 @@ export default function AnimalDetailPage() {
         ph: q.ph ?? q.phValue ?? null,
         color: q.color ?? q.colour ?? q.colorCode ?? '—',
         viscosity: q.viscosity ?? q.viscosityValue ?? null,
+        is_infected: false,
       }));
 
   const activeTrend = livePrediction?.['30_day_trend']
@@ -101,7 +105,6 @@ export default function AnimalDetailPage() {
       }))
     : trend;
 
-  // Added dynamic threshold logic here
   const getDynamicRecommendation = (score) => {
     if (score >= 75) return "High Risk: Isolate cow immediately, hold milk, and contact a veterinarian.";
     if (score >= 50) return "Moderate Risk: Divert milk and perform a California Mastitis Test (CMT).";
@@ -109,7 +112,6 @@ export default function AnimalDetailPage() {
     return "Low Risk: All metrics normal. Continue standard milking routine.";
   };
 
-  // Replaced static backend string with dynamic local logic
   const activeRecommendation = livePrediction
     ? {
         profile: livePrediction.pathogen_profile || 'AI Quarter-Level Analysis',
@@ -149,7 +151,7 @@ export default function AnimalDetailPage() {
   }
 
   async function handleRemove() {
-    if (!window.confirm(`Remove ${animal.name} from your herd?`)) return;
+    if (removePhrase.trim().toUpperCase() !== 'REMOVE') return;
     try {
       setRemoveError('');
       await removeAnimal(animal.id);
@@ -178,7 +180,7 @@ export default function AnimalDetailPage() {
             <div className="min-w-0">
               <h2 className="font-display text-3xl text-milk">{activeAnimal.name}</h2>
               <p className="text-sm text-milk-dim">
-                {activeAnimal.displayTag} · {activeAnimal.breed} · Lactation #{activeAnimal.lactation}
+                {activeAnimal.displayTag} · RFID: {activeAnimal.rfidTag} · {activeAnimal.breed} · Lactation #{activeAnimal.lactation}
               </p>
             </div>
             <RiskBadge risk={activeAnimal.risk} size="lg" />
@@ -226,7 +228,7 @@ export default function AnimalDetailPage() {
               {isRunning ? t('running') : t('runPredictionNow')}
             </button>
             {runError && <span className="text-xs text-red-400">{runError}</span>}
-            <button type="button" onClick={handleRemove} className="dashboard-secondary-button inline-flex items-center gap-2 text-red-700">
+            <button type="button" onClick={() => { setRemovePhrase(''); setShowRemoveDialog(true); }} className="dashboard-secondary-button inline-flex items-center gap-2 text-red-700">
               <Trash2 size={14} /> {t('removeAnimal')}
             </button>
           </div>
@@ -249,6 +251,11 @@ export default function AnimalDetailPage() {
                   <div key={q.quarter} className="rounded-lg border border-milk/10 bg-night-card/60 p-4 flex flex-col">
                     <div className="flex justify-between items-center mb-4">
                       <span className="font-display text-sm text-milk">{q.quarter}</span>
+                      {q.is_infected && (
+                        <span className="rounded bg-red-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-400">
+                          Infected
+                        </span>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-sm">
@@ -292,6 +299,27 @@ export default function AnimalDetailPage() {
           )}
         </div>
       </div>
+      {showRemoveDialog && (
+        <div className="dashboard-modal-backdrop" role="presentation" onMouseDown={() => setShowRemoveDialog(false)}>
+          <section className="dashboard-modal max-w-lg" role="dialog" aria-modal="true" aria-labelledby="remove-animal-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4">
+              <div><p className="dashboard-kicker text-red-700">Permanent action</p><h2 id="remove-animal-title" className="font-display text-2xl text-theme-text-dark">Remove animal</h2></div>
+              <button type="button" className="icon-button" onClick={() => setShowRemoveDialog(false)} aria-label="Close remove animal dialog"><X size={18} /></button>
+            </div>
+            <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
+              <div><dt className="text-theme-text-muted">Name</dt><dd className="font-medium">{activeAnimal.name}</dd></div>
+              <div><dt className="text-theme-text-muted">Animal</dt><dd className="font-medium capitalize">{species}</dd></div>
+              <div><dt className="text-theme-text-muted">Animal ID</dt><dd className="font-medium">{activeAnimal.displayTag}</dd></div>
+              <div><dt className="text-theme-text-muted">RFID</dt><dd className="font-medium">{activeAnimal.rfidTag}</dd></div>
+              <div><dt className="text-theme-text-muted">Breed</dt><dd className="font-medium">{activeAnimal.breed}</dd></div>
+              <div><dt className="text-theme-text-muted">Age</dt><dd className="font-medium">{activeAnimal.age} years</dd></div>
+            </dl>
+            <p className="mt-5 text-sm text-red-700">Type <strong>REMOVE</strong> to confirm this animal will be removed from your herd.</p>
+            <input className="auth-input-wrap mt-2 w-full" value={removePhrase} onChange={(event) => setRemovePhrase(event.target.value)} placeholder="Type REMOVE" autoComplete="off" />
+            <div className="mt-5 flex justify-end gap-3"><button type="button" className="dashboard-secondary-button" onClick={() => setShowRemoveDialog(false)}>Cancel</button><button type="button" className="dashboard-primary-button bg-red-700 hover:bg-red-800" disabled={removePhrase.trim().toUpperCase() !== 'REMOVE'} onClick={handleRemove}><Trash2 size={15} /> Remove animal</button></div>
+          </section>
+        </div>
+      )}
 
       <div className="rounded-xl border border-milk/10 bg-night-card/60 p-5">
         <p className="mb-4 font-display text-lg text-milk">{t('riskTrend30')}</p>

@@ -1,5 +1,5 @@
 /**
- * Singleton Socket.io client connecting to the DairyGuard backend for
+ * Singleton Socket.io client connecting to the NANDI backend for
  * real-time dashboard updates ('telemetry:new', 'animal:updated',
  * 'alert:new'). Connects lazily and re-authenticates whenever the
  * stored JWT changes (e.g. after login/logout).

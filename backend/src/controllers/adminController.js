@@ -5,6 +5,15 @@ const userModel = require('../models/userModel');
 const animalModel = require('../models/animalModel');
 const vetRequestModel = require('../models/vetRequestModel');
 const env = require('../config/env');
+const auditModel = require('../models/auditModel');
+
+const listActivity = asyncHandler(async (req, res) => {
+  res.json({ events: await auditModel.list() });
+});
+
+const listVetRequests = asyncHandler(async (req, res) => {
+  res.json({ requests: await vetRequestModel.listAll() });
+});
 
 const getOverview = asyncHandler(async (req, res) => {
   const [users, animals, farms, risk, requests, farmRows] = await Promise.all([
@@ -33,6 +42,7 @@ const getOverview = asyncHandler(async (req, res) => {
 const createAccount = asyncHandler(async (req, res) => {
   const { full_name, email, password, role, phone, farm_name, farm_state, farm_district, vet_state, vet_district, registration_number } = req.body;
   if (!full_name || !email || !password || !role) return res.status(400).json({ error: 'full_name, email, password and role are required.' });
+  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
   if (!['farmer', 'vet', 'cooperative_admin'].includes(role)) return res.status(400).json({ error: 'Only farmer, vet and cooperative_admin accounts can be created here.' });
   if (role === 'vet' && (!vet_state || !vet_district || !registration_number)) return res.status(400).json({ error: 'Vet state, district and registration number are required.' });
   const normalizedEmail = email.trim().toLowerCase();
@@ -44,6 +54,7 @@ const createAccount = asyncHandler(async (req, res) => {
     vet_approval_status: role === 'vet' ? 'pending' : 'approved',
   });
   if (role === 'vet') await vetRequestModel.create(user.id, vet_district.trim());
+  await auditModel.record({ actorId: req.user.id, action: 'admin_account_created', entityType: 'user', entityId: user.id, details: { role, full_name } });
   res.status(201).json({ user });
 });
 
@@ -54,6 +65,7 @@ const createAnimal = asyncHandler(async (req, res) => {
   const owner = await userModel.findById(owner_id);
   if (!owner || !['farmer', 'cooperative_admin'].includes(owner.role)) return res.status(400).json({ error: 'Animals must belong to a farmer or co-op account.' });
   const animal = await animalModel.create({ owner_id, display_tag, rfid_tag, name, species, breed, age, lactation_number });
+  await auditModel.record({ actorId: req.user.id, action: 'admin_animal_created', entityType: 'animal', entityId: animal.id, details: { name, species, owner_id } });
   res.status(201).json({ animal });
 });
 
@@ -66,6 +78,7 @@ const setUserActive = asyncHandler(async (req, res) => {
 const removeUser = asyncHandler(async (req, res) => {
   const user = await userModel.removeById(req.params.userId);
   if (!user) return res.status(404).json({ error: 'User not found or the main administrator cannot be removed.' });
+  await auditModel.record({ actorId: req.user.id, action: 'account_removed', entityType: 'user', entityId: user.id, details: { full_name: user.full_name, role: user.role } });
   res.json({ user });
 });
 
@@ -80,7 +93,8 @@ const listAnimals = asyncHandler(async (req, res) => {
 const removeAnimal = asyncHandler(async (req, res) => {
   const animal = await animalModel.removeById(req.params.animalId);
   if (!animal) return res.status(404).json({ error: 'Animal not found or already removed.' });
+  await auditModel.record({ actorId: req.user.id, action: 'animal_removed', entityType: 'animal', entityId: animal.id, details: { name: animal.name, rfid_tag: animal.rfid_tag } });
   res.json({ animal });
 });
 
-module.exports = { getOverview, createAccount, createAnimal, setUserActive, removeUser, listAnimals, removeAnimal };
+module.exports = { getOverview, createAccount, createAnimal, setUserActive, removeUser, listAnimals, removeAnimal, listActivity, listVetRequests };

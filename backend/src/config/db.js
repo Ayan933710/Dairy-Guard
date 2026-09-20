@@ -22,14 +22,28 @@ pool.on('error', (err) => {
  * @param {Array} params
  */
 async function query(text, params) {
-  const start = Date.now();
-  const result = await pool.query(text, params);
-  if (env.NODE_ENV !== 'production') {
-    const duration = Date.now() - start;
-    // eslint-disable-next-line no-console
-    console.log('[db] query', { text, duration, rows: result.rowCount });
+  if (!env.DATABASE_URL) {
+    if (env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.warn('[db] DATABASE_URL is not configured. Returning empty result set for this request.');
+    }
+    return { rows: [], rowCount: 0, fields: [] };
   }
-  return result;
+
+  const start = Date.now();
+  try {
+    const result = await pool.query(text, params);
+    if (env.NODE_ENV !== 'production') {
+      const duration = Date.now() - start;
+      // eslint-disable-next-line no-console
+      console.log('[db] query', { text, duration, rows: result.rowCount });
+    }
+    return result;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[db] Query failed:', error.message, { text });
+    throw error; // Propagate to error middleware — never silently swallow DB errors
+  }
 }
 
 /** Get a single client for multi-statement transactions. Caller MUST release() it. */

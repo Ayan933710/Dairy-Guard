@@ -2,7 +2,7 @@
  * Opens Google Maps in a new tab, centered on the user's current location
  * (via the browser Geolocation API) with a "veterinarian" search — so a
  * recommendation card can send the farmer straight to nearby vets without
- * DairyGuard needing to maintain its own directory of clinics.
+ * NANDI needing to maintain its own directory of clinics.
  *
  * Falls back to a location-less Maps search if geolocation is denied,
  * unavailable, or times out.

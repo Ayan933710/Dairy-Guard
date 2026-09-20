@@ -1,13 +1,13 @@
 /**
  * MQTT broker bridge.
  *
- * If your ESP32-S3 firmware / DairyGuard Hub publishes telemetry over
+ * If your ESP32-S3 firmware / NANDI Hub publishes telemetry over
  * MQTT (recommended for LoRa gateways relaying many devices) instead
  * of calling the HTTP ingestion route directly, enable this bridge:
  *
  *   MQTT_ENABLED=true
  *   MQTT_BROKER_URL=mqtt://localhost:1883
- *   MQTT_TELEMETRY_TOPIC=dairyguard/+/telemetry   (the "+" wildcard = device_id)
+ *   MQTT_TELEMETRY_TOPIC=nandi/+/telemetry   (the "+" wildcard = device_id)
  *
  * Expected message payload (JSON, UTF-8) - identical shape to the
  * HTTP ingestion route's body, see routes/telemetryRoutes.js:
@@ -29,7 +29,7 @@
  *   macOS:   brew install mosquitto && brew services start mosquitto
  *   Ubuntu:  sudo apt install mosquitto mosquitto-clients
  * then simulate a device with:
- *   mosquitto_pub -t dairyguard/COLLAR-01/telemetry -m '{"device_id":"COLLAR-01","rfid_tag":"900000000000104","ec":7.1}'
+ *   mosquitto_pub -t nandi/COLLAR-01/telemetry -m '{"device_id":"COLLAR-01","rfid_tag":"900000000000104","ec":7.1}'
  */
 const mqtt = require('mqtt');
 const env = require('./../config/env');

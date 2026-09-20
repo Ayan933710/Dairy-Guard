@@ -5,6 +5,7 @@ import { api } from '../../lib/apiClient.js';
 import { ErrorState, LoadingState } from '../shared/AsyncState.jsx';
 import DistrictMap from '../shared/DistrictMap.jsx';
 import { useAuth } from '../../lib/AuthContext.jsx';
+import LocationLink from '../shared/LocationLink.jsx';
 
 function FarmModal({ farm, location, onClose }) {
   if (!farm) return null;
@@ -12,13 +13,13 @@ function FarmModal({ farm, location, onClose }) {
     <div className="dashboard-modal-backdrop" role="presentation" onMouseDown={onClose}>
       <section className="dashboard-modal max-w-lg" role="dialog" aria-modal="true" aria-label="Farm details" onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-start justify-between gap-4">
-          <div><p className="dashboard-kicker">Farm detail</p><h2 className="font-display text-2xl text-theme-text-dark">{farm.farm_name || 'Unnamed farm'}</h2><p className="text-sm text-theme-text-muted">{farm.farm_id} · Owner: {farm.owner_name}</p></div>
+          <div><p className="dashboard-kicker">Farm detail</p><h2 className="font-display text-2xl text-theme-text-dark">{farm.farm_name || 'Unnamed farm'}</h2><p className="text-sm text-theme-text-muted">{farm.farm_id} · Owner: {farm.owner_name} · Contact: {farm.owner_phone || 'Not provided'}</p></div>
           <button type="button" className="dashboard-secondary-button" onClick={onClose}>Close</button>
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-          <div className="rounded-lg bg-slate-50 p-3"><span className="text-theme-text-muted">Total animals</span><strong className="mt-1 block text-lg">{farm.total_animals}</strong></div>
-          <div className="rounded-lg bg-red-50 p-3"><span className="text-theme-text-muted">Mastitis risk</span><strong className="mt-1 block text-lg text-red-700">{farm.mastitis_risk_animals}</strong></div>
-          <div className="col-span-2 rounded-lg bg-slate-50 p-3"><span className="text-theme-text-muted">Resolved location</span><strong className="mt-1 block">{location || 'Coordinates pending'}</strong><span className="mt-1 block text-xs text-theme-text-muted">Exact hub: {farm.hub_latitude}, {farm.hub_longitude}</span></div>
+          <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3"><span className="text-theme-text-muted">Total animals</span><strong className="mt-1 block text-lg">{farm.total_animals}</strong></div>
+          <div className="rounded-lg bg-red-50 dark:bg-red-900/30 p-3"><span className="text-theme-text-muted">Mastitis risk</span><strong className="mt-1 block text-lg text-red-700 dark:text-red-400">{farm.mastitis_risk_animals}</strong></div>
+          <div className="col-span-2 rounded-lg bg-slate-50 dark:bg-slate-800 p-3"><span className="text-theme-text-muted">Resolved location</span><strong className="mt-1 block">{location || <LocationLink latitude={farm.hub_latitude} longitude={farm.hub_longitude} />}</strong></div>
         </div>
         <div className="mt-4 border-t border-slate-200 pt-4"><h3 className="font-medium">Other important info</h3><p className="mt-1 text-sm text-theme-text-muted">{farm.amr_rising_animals > 0 ? `${farm.amr_rising_animals} animal(s) show rising AMR.` : 'No rising AMR signal in the current snapshot.'}</p></div>
       </section>
@@ -73,17 +74,17 @@ export default function VetDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <header><p className="dashboard-kicker">Veterinary Officer Console</p><h1 className="dashboard-page-title">District health view</h1><p className="mt-1 text-sm text-theme-text-muted">{data.district} · {data.farms.length} farms in scope</p></header>
+      <header className="vet-dashboard-hero"><div><h1 className="dashboard-page-title">{user?.vet_designation || 'Veterinary Officer'}</h1><p className="mt-2 max-w-xl text-sm text-theme-text-muted">District-level herd health intelligence, risk signals, and recommended actions in one view.</p></div><div className="vet-dashboard-hero-meta"><div><span>District</span><strong>{data.district}</strong></div></div></header>
       {activeTab === 'overview' && <>
-        <div className="grid gap-4 sm:grid-cols-3"><Metric label="Total farms in district" value={data.farms.length} icon={ClipboardCheck} /><Metric label="Farms with mastitis risk" value={mastitisFarms} icon={ShieldAlert} /><Metric label="Farms with rising AMR" value={amrFarms} icon={AlertTriangle} /></div>
-        <section className="dashboard-panel overflow-x-auto"><h2 className="dashboard-section-title">District farms</h2><table className="mt-4 w-full min-w-[720px] text-left text-sm"><thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-theme-text-muted"><tr><th className="py-3">Farm / ID</th><th>Total animals</th><th>Mastitis risk</th><th>Location</th></tr></thead><tbody>{data.farms.map((farm) => <tr key={farm.farm_owner_id} className="border-b border-slate-100"><td className="py-3"><strong>{farm.farm_name || 'Unnamed farm'}</strong><span className="block text-xs text-theme-text-muted">{farm.farm_id} · {farm.owner_name}</span></td><td>{farm.total_animals}</td><td className={farm.mastitis_risk_animals ? 'font-semibold text-red-700' : ''}>{farm.mastitis_risk_animals}</td><td>{locations[farm.farm_owner_id] || (farm.hub_latitude && farm.hub_longitude ? `${farm.hub_latitude}, ${farm.hub_longitude}` : 'Coordinates pending')}</td></tr>)}</tbody></table></section>
+        <div className="vet-metric-grid grid gap-3 sm:grid-cols-3"><Metric label="Total farms in district" value={data.farms.length} icon={ClipboardCheck} /><Metric label="Farms with mastitis risk" value={mastitisFarms} icon={ShieldAlert} tone="risk" /><Metric label="Farms with rising AMR" value={amrFarms} icon={AlertTriangle} tone="warning" /></div>
+        <section className="dashboard-panel overflow-x-auto"><h2 className="dashboard-section-title">District farms</h2><table className="mt-4 w-full min-w-[820px] text-left text-sm"><thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-theme-text-muted"><tr><th className="py-3">Farm / ID</th><th>Contact</th><th>Total animals</th><th>Mastitis risk</th><th>Location</th></tr></thead><tbody>{data.farms.map((farm) => <tr key={farm.farm_owner_id} className="border-b border-slate-100"><td className="py-3"><strong>{farm.farm_name || 'Unnamed farm'}</strong><span className="block text-xs text-theme-text-muted">{farm.farm_id} · {farm.owner_name}</span></td><td>{farm.owner_phone || 'Not provided'}</td><td>{farm.total_animals}</td><td className={farm.mastitis_risk_animals ? 'font-semibold text-red-700' : ''}>{farm.mastitis_risk_animals}</td><td>{locations[farm.farm_owner_id] || <LocationLink latitude={farm.hub_latitude} longitude={farm.hub_longitude} />}</td></tr>)}</tbody></table></section>
       </>}
 
       {activeTab === 'maps' && <div className="grid gap-6 xl:grid-cols-2"><section className="dashboard-panel"><h2 className="dashboard-section-title">Mastitis risk map</h2><p className="mb-4 text-sm text-theme-text-muted">Red dots mark farms with high mastitis-risk animals.</p><DistrictMap center={districtCenter} markers={mastitisMarkers} onSelect={setSelectedFarm} /></section><section className="dashboard-panel"><h2 className="dashboard-section-title">AMR trend map</h2><p className="mb-4 text-sm text-theme-text-muted">Amber dots mark farms with a rising AMR snapshot.</p><DistrictMap center={districtCenter} markers={amrMarkers} onSelect={setSelectedFarm} /></section></div>}
 
-      {activeTab === 'recommendations' && <section className="dashboard-panel"><h2 className="dashboard-section-title">Action queue</h2><div className="mt-4 space-y-3">{data.recommendations.length ? data.recommendations.map((item) => { const isAcknowledged = acknowledged.has(item.farm_owner_id); return <article key={item.farm_owner_id} className={`flex flex-wrap items-start justify-between gap-4 rounded-lg border p-4 ${isAcknowledged ? 'border-emerald-200 bg-emerald-50/60' : 'border-red-200 bg-red-50/60'}`}><div><h3 className="font-medium">{item.farm_name || 'Unnamed farm'}</h3><p className="text-sm text-theme-text-muted">{item.owner_name} · {item.hub_latitude}, {item.hub_longitude}</p><p className="mt-2 text-sm text-red-800">{item.action} ({item.mastitis_risk_animals} at-risk animals)</p></div><button type="button" className="dashboard-secondary-button" disabled={isAcknowledged} onClick={() => setAcknowledged((current) => new Set(current).add(item.farm_owner_id))}><CheckCircle2 size={14} /> {isAcknowledged ? 'Acknowledged' : 'Acknowledge'}</button></article>; }) : <p className="text-sm text-theme-text-muted">No urgent farm recommendations.</p>}</div></section>}
+      {activeTab === 'recommendations' && <section className="dashboard-panel"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="dashboard-kicker">Priority care queue</p><h2 className="dashboard-section-title">Recommendations</h2><p className="mt-1 text-sm text-theme-text-muted">Contact the farm and open its location directly from each action.</p></div><span className="rounded-full bg-red-50 dark:bg-red-900/30 px-3 py-1 text-xs font-semibold text-red-700 dark:text-red-400">{data.recommendations.length} active</span></div><div className="mt-5 space-y-3">{data.recommendations.length ? data.recommendations.map((item) => { const isAcknowledged = acknowledged.has(item.farm_owner_id); return <article key={item.farm_owner_id} className={`vet-recommendation-card flex flex-wrap items-start justify-between gap-4 rounded-xl border p-4 ${isAcknowledged ? 'is-acknowledged border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-900/30' : 'border-red-200 dark:border-red-800 bg-red-50/60 dark:bg-red-900/30'}`}><div className="min-w-0"><h3 className="font-medium text-theme-text-dark">{item.farm_name || 'Unnamed farm'}</h3><p className="mt-1 text-sm text-theme-text-muted">{item.owner_name}</p><p className="mt-3 flex flex-wrap gap-3 text-xs"><a className="text-sky-700 hover:underline" href={item.owner_phone ? `tel:${item.owner_phone}` : undefined}>Contact: {item.owner_phone || 'Not provided'}</a><LocationLink latitude={item.hub_latitude} longitude={item.hub_longitude} /></p><p className="mt-3 text-sm text-red-800 dark:text-red-400">{item.action} ({item.mastitis_risk_animals} at-risk animals)</p></div><button type="button" className="dashboard-secondary-button" disabled={isAcknowledged} onClick={() => setAcknowledged((current) => new Set(current).add(item.farm_owner_id))}><CheckCircle2 size={14} /> {isAcknowledged ? 'Acknowledged' : 'Acknowledge'}</button></article>; }) : <p className="text-sm text-theme-text-muted">No urgent farm recommendations.</p>}</div></section>}
 
-      {activeTab === 'history' && <section className="dashboard-panel overflow-x-auto"><h2 className="dashboard-section-title">Yearly farm risk history</h2><table className="mt-4 w-full min-w-[680px] text-left text-sm"><thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-theme-text-muted"><tr><th className="py-3">Year</th><th>Farm</th><th>Peak mastitis score</th><th>Peak AMR score</th><th>Affected animals</th></tr></thead><tbody>{data.history.map((item) => <tr key={`${item.year}-${item.farm_owner_id}`} className="border-b border-slate-100"><td className="py-3">{item.year}</td><td>{item.farm_name || item.farm_id}</td><td>{item.peak_mastitis_score ?? '—'}</td><td>{item.peak_amr_score ?? '—'}</td><td>{item.affected_animals}</td></tr>)}</tbody></table></section>}
+      {activeTab === 'history' && <section className="dashboard-panel overflow-x-auto"><h2 className="dashboard-section-title">Yearly farm risk history</h2><table className="mt-4 w-full min-w-[680px] text-left text-sm"><thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-theme-text-muted"><tr><th className="py-3">Year</th><th>Farm</th><th>Peak mastitis score</th><th>Peak AMR score</th><th>Affected animals</th></tr></thead><tbody>{data.history.filter((item) => item.year && (item.peak_mastitis_score != null || item.peak_amr_score != null)).map((item) => <tr key={`${item.year}-${item.farm_owner_id}`} className="border-b border-slate-100"><td className="py-3">{item.year}</td><td>{item.farm_name || item.farm_id}</td><td>{item.peak_mastitis_score ?? '—'}</td><td>{item.peak_amr_score ?? '—'}</td><td>{item.affected_animals}</td></tr>)}</tbody></table></section>}
       <FarmModal farm={selectedFarm} location={selectedFarm ? locations[selectedFarm.farm_owner_id] : ''} onClose={() => setSelectedFarm(null)} />
     </div>
   );
@@ -95,8 +96,8 @@ function DistrictSetupRequest({ user }) {
   const [copyError, setCopyError] = useState('');
   const [requestStatus, setRequestStatus] = useState('');
   const [requestError, setRequestError] = useState('');
-  const administratorEmail = import.meta.env.VITE_ADMIN_CONTACT_EMAIL || 'admin@dairyguard.ai';
-  const requestText = `Please add my veterinary district in DairyGuard.\nName: ${user?.full_name || ''}\nRegistration number: ${user?.registration_number || 'Not provided'}\nPhone: ${user?.phone || 'Not provided'}\nRequested district: ${district || 'Not provided'}`;
+  const administratorEmail = import.meta.env.VITE_ADMIN_CONTACT_EMAIL || 'admin@nandi.ai';
+  const requestText = `Please add my veterinary district in NANDI.\nName: ${user?.full_name || ''}\nRegistration number: ${user?.registration_number || 'Not provided'}\nPhone: ${user?.phone || 'Not provided'}\nRequested district: ${district || 'Not provided'}`;
 
   async function copyRequest() {
     try {
@@ -127,30 +128,30 @@ function DistrictSetupRequest({ user }) {
 
   return (
     <section className="dashboard-panel max-w-2xl">
-      <p className="dashboard-kicker">Veterinary Officer Console</p>
+      <p className="dashboard-kicker">Account setup</p>
       <h1 className="dashboard-page-title">District setup required</h1>
       <p className="mt-2 text-sm text-theme-text-muted">
         Your account does not have a vet district yet. An administrator must add it before you can view district farm health data.
       </p>
 
-      <div className="mt-6 rounded-xl border border-sky-200 bg-sky-50/70 p-4 text-sm text-slate-700">
-        <h2 className="font-display text-lg text-slate-900">How to ask an administrator</h2>
+      <div className="mt-6 rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-900/30 p-4 text-sm text-slate-700 dark:text-slate-300">
+        <h2 className="font-display text-lg text-slate-900 dark:text-slate-100">How to ask an administrator</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-5">
           <li>Enter the district where you serve.</li>
           <li>Copy the prepared request or open the administrator email.</li>
-          <li>Ask them to update your vet district in your DairyGuard account.</li>
+          <li>Ask them to update your vet district in your NANDI account.</li>
         </ol>
       </div>
 
       <label className="mt-5 block text-sm">
-        <span className="mb-2 block font-medium text-slate-700">Requested district</span>
-        <input value={district} onChange={(event) => setDistrict(event.target.value)} placeholder="e.g. Nadia" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" />
+        <span className="mb-2 block font-medium text-slate-700 dark:text-slate-300">Requested district</span>
+        <input value={district} onChange={(event) => setDistrict(event.target.value)} placeholder="e.g. Nadia" className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:focus:ring-sky-900" />
       </label>
-      <pre className="mt-4 whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">{requestText}</pre>
+      <pre className="mt-4 whitespace-pre-wrap rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 text-xs leading-5 text-slate-600 dark:text-slate-400">{requestText}</pre>
       <div className="mt-4 flex flex-wrap gap-3">
         <button type="button" className="dashboard-primary-button" onClick={copyRequest}><Copy size={15} /> {copied ? 'Copied' : 'Copy request'}</button>
-        <button type="button" className="dashboard-primary-button" onClick={submitRequest}><ShieldCheck size={15} /> Submit in DairyGuard</button>
-        <a className="dashboard-secondary-button" href={`mailto:${administratorEmail}?subject=DairyGuard%20vet%20district%20request&body=${encodeURIComponent(requestText)}`}><Mail size={15} /> Email administrator</a>
+        <button type="button" className="dashboard-primary-button" onClick={submitRequest}><ShieldCheck size={15} /> Submit in NANDI</button>
+        <a className="dashboard-secondary-button" href={`mailto:${administratorEmail}?subject=NANDI%20vet%20district%20request&body=${encodeURIComponent(requestText)}`}><Mail size={15} /> Email administrator</a>
       </div>
       <p className="mt-3 text-xs text-theme-text-muted">Administrator contact: {administratorEmail}</p>
       {copyError && <p className="mt-2 text-xs text-red-600" role="alert">{copyError}</p>}
@@ -160,6 +161,6 @@ function DistrictSetupRequest({ user }) {
   );
 }
 
-function Metric({ label, value, icon: Icon }) {
-  return <div className="dashboard-panel flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-lg bg-sky-50 text-theme-primary"><Icon size={18} /></span><div><p className="text-xs text-theme-text-muted">{label}</p><strong className="font-display text-2xl">{value}</strong></div></div>;
+function Metric({ label, value, icon: Icon, tone = 'default' }) {
+  return <div className={`vet-metric dashboard-panel flex items-center gap-4 ${tone}`}><span className="grid h-11 w-11 place-items-center rounded-xl bg-sky-50 dark:bg-sky-900/30 text-theme-primary"><Icon size={19} /></span><div><p className="text-xs uppercase tracking-wide text-theme-text-muted">{label}</p><strong className="mt-1 block font-display text-3xl text-theme-text-dark">{value}</strong></div></div>;
 }

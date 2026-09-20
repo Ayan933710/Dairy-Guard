@@ -7,19 +7,19 @@ import { useLanguage } from '../../hooks/useLanguage.jsx';
 import { useFetch } from '../../lib/useFetch.js';
 import { fetchHerdBySpecies } from '../../lib/herdApi.js';
 
-const SPECIES_LABEL_KEY = { cow: 'speciesCows', buffalo: 'speciesBuffaloes' };
+const SPECIES_LABELS = { cow: 'Cow', buffalo: 'Buffalo' };
 
 export default function SpeciesListPage() {
   const { t } = useLanguage();
   const { species } = useParams();
   const { data: animals, loading, error, refetch } = useFetch(() => fetchHerdBySpecies(species), [species]);
-  const speciesLabel = SPECIES_LABEL_KEY[species] ? t(SPECIES_LABEL_KEY[species]) : species;
+  const speciesLabel = SPECIES_LABELS[species] || species;
 
   return (
     <div>
       <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs text-milk-dim">{t('speciesLabel')}</p>
+          <p className="text-xs text-milk-dim">Animal</p>
           <h2 className="font-display text-2xl text-milk">
             {speciesLabel}
           </h2>
@@ -51,6 +51,7 @@ export default function SpeciesListPage() {
                     <p className="text-xs text-milk-dim">
                       {a.displayTag} · {a.breed}
                     </p>
+                    <p className="mt-1 text-xs text-milk-dim">RFID: {a.rfidTag}</p>
                   </div>
                   <span className="shrink-0"><RiskBadge risk={a.risk} /></span>
                 </div>

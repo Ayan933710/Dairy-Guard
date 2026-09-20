@@ -1,7 +1,7 @@
 -- ============================================================
 -- 007_remove_goat_support.sql
 --
--- Removes goat support entirely - DairyGuard AI now tracks only cows
+-- Removes goat support entirely - NANDI AI now tracks only cows
 -- and buffaloes. Safe to run whether or not this database ever had
 -- goat data or the goat-only 'L'/'R' quarter values (both steps are
 -- no-ops if there's nothing to clean up).

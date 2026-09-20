@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Check, Eye, EyeOff, Leaf, LockKeyhole, Mail, Phone, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, Eye, EyeOff, Leaf, LockKeyhole, Mail, Phone, ShieldCheck } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import ThemeToggle from '../shared/ThemeToggle.jsx';
@@ -12,6 +12,18 @@ const ROLES = [
   { value: 'vet', label: 'Vet' },
   { value: 'cooperative_admin', label: 'CoopAdmin' },
 ];
+
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
+  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+  'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
+  'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana',
+  'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands',
+  'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir',
+  'Ladakh', 'Lakshadweep', 'Puducherry',
+];
+
+const VET_DESIGNATIONS = ['VO (Veterinary Officer)', 'SVO (Senior Veterinary Officer)', 'AH (Animal Husbandry)', 'Other'];
 
 export default function AuthPage() {
   const { t, language } = useLanguage();
@@ -28,18 +40,23 @@ export default function AuthPage() {
   const [issuedFarmId, setIssuedFarmId] = useState('');
   const [farmIdCopied, setFarmIdCopied] = useState(false);
   const [selectedRole, setSelectedRole] = useState('farmer');
+  const [vetDesignationChoice, setVetDesignationChoice] = useState('');
+  const [customVetDesignation, setCustomVetDesignation] = useState('');
   const [preferredLanguage, setPreferredLanguage] = useState(language);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
     setActiveMode(routeMode);
     setSubmitted(false);
     setFormError('');
+    setTermsAccepted(false);
   }, [routeMode]);
 
   function switchMode(nextMode) {
     if (nextMode === mode) return;
     setSubmitted(false);
     setFormError('');
+    setTermsAccepted(false);
     setActiveMode(nextMode);
     navigate(`/${nextMode}`, { replace: true });
   }
@@ -57,6 +74,10 @@ export default function AuthPage() {
           password: form.get('password'),
         });
       } else {
+        const resolvedVetDesignation = form.get('role') === 'vet'
+          ? (vetDesignationChoice === 'Other' ? customVetDesignation.trim() : (form.get('vet_designation') || '').toString().trim())
+          : undefined;
+
         const newUser = await register({
           full_name: form.get('full_name'),
           email: form.get('email'),
@@ -66,6 +87,7 @@ export default function AuthPage() {
           farm_name: form.get('farm_name') || undefined,
           vet_state: form.get('vet_state') || undefined,
           vet_district: form.get('vet_district') || undefined,
+          vet_designation: resolvedVetDesignation || undefined,
           registration_number: form.get('registration_number') || undefined,
           preferred_language: preferredLanguage,
         });
@@ -84,9 +106,9 @@ export default function AuthPage() {
       <div className="auth-atmosphere auth-atmosphere-one" aria-hidden="true" />
       <div className="auth-atmosphere auth-atmosphere-two" aria-hidden="true" />
       <header className="auth-header">
-        <Link to="/" className="auth-brand" aria-label="DairyGuard home">
+        <Link to="/" className="auth-brand" aria-label="NANDI home">
           <span className="brand-mark"><span /></span>
-          <span className="font-display text-lg tracking-tight">DairyGuard <b>AI</b></span>
+          <span className="font-display text-lg tracking-tight">NANDI</span>
         </Link>
         <div className="flex items-center gap-4">
           <LanguageSelect />
@@ -96,10 +118,6 @@ export default function AuthPage() {
       </header>
 
       <div className="auth-center auth-center-card">
-        <motion.div className="auth-top-copy" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }}>
-          <span><Sparkles size={13} /> {t('earlyCare')}</span>
-          <p>{t('authIntro')}</p>
-        </motion.div>
         <motion.div layout className={`auth-card-shell auth-card-${mode}`} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ layout: { type: 'spring', stiffness: 240, damping: 28 }, opacity: { duration: .5 }, y: { duration: .5, ease: 'easeOut' } }}>
           <motion.section layout transition={{ layout: { type: 'spring', stiffness: 240, damping: 28 } }} className="auth-form-panel">
           <AnimatePresence mode="wait" initial={false}>
@@ -133,7 +151,7 @@ export default function AuthPage() {
           ) : (
             <motion.div key={mode} initial={{ opacity: 0, x: mode === 'login' ? -18 : 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: mode === 'login' ? 18 : -18 }} transition={{ duration: .28, ease: 'easeOut' }}>
             <div className="auth-form-heading"><span>{mode === 'login' ? t('welcomeBack') : t('createWorkspace')}</span><i /></div>
-            <form className="auth-form" onSubmit={handleSubmit}>
+            <form className={`auth-form ${mode === 'signup' ? 'auth-form-signup' : ''}`} onSubmit={handleSubmit}>
               {mode === 'signup' && (
                 <>
                   <label><span>{t('fullName')}</span><div className="auth-input-wrap"><Leaf size={16} /><input name="full_name" type="text" placeholder={t('yourName')} required /></div></label>
@@ -151,8 +169,12 @@ export default function AuthPage() {
                   </label>
                   {selectedRole === 'vet' && (
                     <>
-                      <label><span>Vet Officer State</span><div className="auth-input-wrap"><Leaf size={16} /><input name="vet_state" type="text" placeholder="State" required /></div></label>
+                      <label><span>Vet Officer State</span><div className="auth-input-wrap"><Leaf size={16} /><input name="vet_state" type="text" list="indian-states" placeholder="Search or select a state" required /></div><datalist id="indian-states">{INDIAN_STATES.map((state) => <option key={state} value={state} />)}</datalist></label>
                       <label><span>Vet Officer District</span><div className="auth-input-wrap"><Leaf size={16} /><input name="vet_district" type="text" placeholder="District" required /></div></label>
+                      <label><span>Designation</span><select name="vet_designation" value={vetDesignationChoice} onChange={(event) => setVetDesignationChoice(event.target.value)} className="auth-select" required><option value="" disabled>Select designation</option>{VET_DESIGNATIONS.map((designation) => <option key={designation} value={designation}>{designation}</option>)}</select></label>
+                      {vetDesignationChoice === 'Other' && (
+                        <label><span>Custom designation</span><div className="auth-input-wrap"><ShieldCheck size={16} /><input type="text" value={customVetDesignation} onChange={(event) => setCustomVetDesignation(event.target.value)} placeholder="Write your desired designation" required /></div></label>
+                      )}
                       <label><span>Registration Number</span><div className="auth-input-wrap"><ShieldCheck size={16} /><input name="registration_number" type="text" placeholder="Veterinary registration number" required /></div></label>
                     </>
                   )}
@@ -160,19 +182,18 @@ export default function AuthPage() {
                   <label>
                     <span>{t('phoneLabel')}</span>
                     <div className="auth-input-wrap"><Phone size={16} /><input name="phone" type="tel" placeholder={t('identifierPlaceholder')} required /></div>
-                    <small className="mt-1 block text-xs text-milk-dim">{t('phoneRequiredNote')}</small>
                   </label>
                   <label><span>{t('emailLabel')} ({t('optional')})</span><div className="auth-input-wrap"><Mail size={16} /><input name="email" type="email" placeholder={t('emailPlaceholder')} /></div></label>
-                  <label><span>{t('alertLanguage')}</span><select name="preferred_language" value={preferredLanguage} onChange={(event) => setPreferredLanguage(event.target.value)} className="auth-input-wrap" style={{ width: '100%', padding: '0.6rem 0.75rem' }}><option value="en">English</option><option value="hi">हिन्दी</option><option value="kn">ಕನ್ನಡ</option></select><small className="mt-1 block text-xs text-milk-dim">{t('alertLanguageHelp')}</small></label>
+                  <label><span>{t('alertLanguage')}</span><select name="preferred_language" value={preferredLanguage} onChange={(event) => setPreferredLanguage(event.target.value)} className="auth-select"><option value="en">English</option><option value="hi">हिन्दी</option><option value="kn">ಕನ್ನಡ</option></select></label>
                 </>
               )}
               {mode === 'login' && (
                 <label><span>{t('signInIdentifierLabel')}</span><div className="auth-input-wrap"><Mail size={16} /><input name="identifier" type="text" placeholder={t('signInIdentifierPlaceholder')} required /></div></label>
               )}
               <label><span>{t('password')}</span><div className="auth-input-wrap"><LockKeyhole size={16} /><input name="password" type={showPassword ? 'text' : 'password'} placeholder={t('passwordPlaceholder')} minLength="8" required /><button type="button" className="auth-password-toggle" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? t('hidePassword') : t('showPassword')}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label>
-              {mode === 'login' ? <div className="auth-form-meta"><label className="auth-check"><input type="checkbox" /> <span>{t('rememberMe')}</span></label><button type="button" className="auth-text-button">{t('forgotPassword')}</button></div> : <p className="auth-terms">{t('terms')}</p>}
+              {mode === 'login' ? <div className="auth-form-meta"><label className="auth-check"><input type="checkbox" /> <span>{t('rememberMe')}</span></label><button type="button" className="auth-text-button">{t('forgotPassword')}</button></div> : <label className="auth-check auth-terms-check"><input name="termsAccepted" type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} required /> <span>{t('acceptTerms')}</span></label>}
               {formError && <p className="dashboard-form-error" role="alert">{formError}</p>}
-              <button type="submit" className="auth-submit" disabled={isSubmitting}>
+              <button type="submit" className="auth-submit" disabled={isSubmitting || (mode === 'signup' && !termsAccepted)}>
                 {isSubmitting ? t('pleaseWait') : mode === 'login' ? t('signIn') : t('createAccount')} <ArrowRight size={17} />
               </button>
               {mode === 'login' && (
@@ -196,7 +217,7 @@ export default function AuthPage() {
                 transition={{ duration: .34, ease: [0.22, 1, 0.36, 1] }}
               >
                 <span className="auth-welcome-icon">{mode === 'login' ? <Leaf size={24} /> : <ShieldCheck size={24} />}</span>
-                <span className="auth-welcome-kicker">DairyGuard AI</span>
+                <span className="auth-welcome-kicker">NANDI</span>
                 <h1>{mode === 'login' ? t('welcomeBackBang') : t('helloPartner')}</h1>
                 <p>{mode === 'login' ? t('loginDescription') : t('signupDescription')}</p>
                 <button type="button" className="auth-outline-button" onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}>

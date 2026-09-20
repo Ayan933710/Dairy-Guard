@@ -13,20 +13,14 @@ import {
   LineChart,
   Line,
 } from 'recharts';
-import { motion } from 'framer-motion';
 import { RISK_LEVELS, riskColor } from '../../data/herd.js';
 import AnimatedChartTooltip, { AnimatedActiveDot } from '../shared/AnimatedChartTooltip.jsx';
-import InteractiveCard from '../shared/InteractiveCard.jsx';
 import { LoadingState, ErrorState } from '../shared/AsyncState.jsx';
 import { useLanguage } from '../../hooks/useLanguage.jsx';
 import { useFetch } from '../../lib/useFetch.js';
 import { fetchAnalyticsSummary } from '../../lib/herdApi.js';
 
 const CARD = 'rounded-xl border border-slate-200 bg-theme-bg-card p-5 shadow-sm';
-const chartGroupVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.12 } },
-};
 
 export default function AnalyticsPage() {
   const { t } = useLanguage();
@@ -57,13 +51,8 @@ export default function AnalyticsPage() {
         <p className="mt-1 text-sm text-theme-text-muted">{t('herdTrends')}</p>
       </div>
 
-      <motion.div
-        variants={chartGroupVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid gap-6 lg:grid-cols-2"
-      >
-        <InteractiveCard className={`${CARD} min-w-0`}>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className={`${CARD} min-w-0`}>
           <p className="mb-4 font-display text-lg text-theme-text-dark">{t('riskDistribution')}</p>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -81,7 +70,9 @@ export default function AnalyticsPage() {
                   ))}
                 </Pie>
                 <Legend
-                  wrapperStyle={{ fontSize: 12, color: '#64748B' }}
+                  verticalAlign="bottom"
+                  height={42}
+                  wrapperStyle={{ fontSize: 12, color: '#64748B', lineHeight: '20px' }}
                   formatter={(v) => <span style={{ color: '#64748B' }}>{v}</span>}
                 />
                 <Tooltip
@@ -90,16 +81,16 @@ export default function AnalyticsPage() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </InteractiveCard>
+        </div>
 
-        <InteractiveCard className={`${CARD} min-w-0`}>
+        <div className={`${CARD} min-w-0`}>
           <p className="mb-4 font-display text-lg text-theme-text-dark">{t('averageRisk')}</p>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={speciesAvg}>
                 <CartesianGrid stroke="#E2E8F0" vertical={false} />
-                <XAxis dataKey="species" stroke="#64748B" fontSize={12} tickLine={false} label={{ value: t('speciesAxis'), position: 'insideBottom', offset: -4, fill: '#64748B', fontSize: 11 }} />
-                <YAxis stroke="#64748B" fontSize={12} tickLine={false} width={30} label={{ value: t('riskAxis'), angle: -90, position: 'insideLeft', fill: '#64748B', fontSize: 11 }} />
+                <XAxis dataKey="species" stroke="#64748B" fontSize={12} tickLine={false} tickFormatter={(value) => value === 'cow' ? 'Cow' : value === 'buffalo' ? 'Buffalo' : value} />
+                <YAxis stroke="#64748B" fontSize={12} tickLine={false} width={36} domain={[0, 100]} />
                 <Tooltip
                   content={<AnimatedChartTooltip />}
                 />
@@ -107,9 +98,9 @@ export default function AnalyticsPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </InteractiveCard>
+        </div>
 
-        <InteractiveCard className={`${CARD} min-w-0 lg:col-span-2`}>
+        <div className={`${CARD} min-w-0 lg:col-span-2`}>
           <p className="mb-4 font-display text-lg text-theme-text-dark">{t('herdAvgTrend30')}</p>
           <div className="h-56">
             {herdTrend.length === 0 ? (
@@ -118,7 +109,7 @@ export default function AnalyticsPage() {
               </p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={herdTrend} margin={{ bottom: 18 }}>
+                <LineChart data={herdTrend} margin={{ top: 8, right: 12, left: 8, bottom: 8 }}>
                   <CartesianGrid stroke="#E2E8F0" vertical={false} />
                   <XAxis
                     dataKey="day"
@@ -129,10 +120,9 @@ export default function AnalyticsPage() {
                     minTickGap={28}
                     angle={-35}
                     textAnchor="end"
-                    height={40}
-                    label={{ value: t('dateAxis'), position: 'insideBottom', offset: -8, fill: '#64748B', fontSize: 11 }}
+                    height={34}
                   />
-                  <YAxis stroke="#64748B" fontSize={12} tickLine={false} width={30} domain={[0, 100]} label={{ value: t('riskAxis'), angle: -90, position: 'insideLeft', fill: '#64748B', fontSize: 11 }} />
+                  <YAxis stroke="#64748B" fontSize={12} tickLine={false} width={36} domain={[0, 100]} />
                   <Tooltip
                     content={<AnimatedChartTooltip />}
                   />
@@ -148,8 +138,8 @@ export default function AnalyticsPage() {
               </ResponsiveContainer>
             )}
           </div>
-        </InteractiveCard>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }

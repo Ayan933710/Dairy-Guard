@@ -1,7 +1,7 @@
 -- ============================================================
 -- 001_create_users.sql
 -- Users table: credentials + Role-Based Access Control (RBAC)
--- Roles map to the three personas in the DairyGuard frontend:
+-- Roles map to the three personas in the NANDI frontend:
 --   farmer          - owns/manages animals in their own herd
 --   vet             - can view & annotate any herd, issue recommendations
 --   cooperative_admin - oversees multiple farmers under a cooperative

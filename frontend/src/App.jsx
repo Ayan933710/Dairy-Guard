@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+﻿import { lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import HeroSection from './components/landing/HeroSection.jsx';
@@ -22,6 +22,7 @@ const VetDashboardPage = lazy(() => import('./components/dashboard/VetDashboardP
 const WeeklyInputPage = lazy(() => import('./components/dashboard/WeeklyInputPage.jsx'));
 const AdminDashboardPage = lazy(() => import('./components/dashboard/AdminDashboardPage.jsx'));
 const MainAdminDashboardPage = lazy(() => import('./components/dashboard/MainAdminDashboardPage.jsx'));
+const AdminHistoryPage = lazy(() => import('./components/dashboard/AdminHistoryPage.jsx'));
 const VetApprovalPendingPage = lazy(() => import('./components/dashboard/VetApprovalPendingPage.jsx'));
 
 function RouteLoading() {
@@ -82,9 +83,13 @@ export default function App() {
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="predictions" element={<PredictionsPage />} />
                 <Route path="history" element={<HistoryPage />} />
+                <Route path="admin-history" element={<ProtectedRoute requiredRole="administrator"><AdminHistoryPage /></ProtectedRoute>} />
                 <Route path="weekly-input" element={<WeeklyInputPage />} />
-                <Route path="vet-requests" element={<AdminDashboardPage />} />
-                <Route path="admin" element={<MainAdminDashboardPage />} />
+                <Route path="vet-requests" element={<ProtectedRoute requiredRole="administrator"><AdminDashboardPage /></ProtectedRoute>} />
+                <Route path="accounts" element={<ProtectedRoute requiredRole="administrator"><MainAdminDashboardPage includeVetRequests={false} /></ProtectedRoute>} />
+                <Route path="animals" element={<ProtectedRoute requiredRole="administrator"><MainAdminDashboardPage showOnlyAnimals /></ProtectedRoute>} />
+                <Route path="regional-analysis" element={<ProtectedRoute requiredRole="administrator"><MainAdminDashboardPage showRegionalAnalysis /></ProtectedRoute>} />
+                <Route path="admin" element={<ProtectedRoute requiredRole="administrator"><MainAdminDashboardPage /></ProtectedRoute>} />
               </Route>
             </Routes>
           </Suspense>
@@ -98,6 +103,6 @@ function RoleDashboard() {
   const { user } = useAuth();
   if (user?.role === 'vet' && user.vet_approval_status !== 'approved') return <VetApprovalPendingPage />;
   if (user?.role === 'vet') return <VetDashboardPage />;
-  if (user?.role === 'administrator') return <MainAdminDashboardPage />;
+  if (user?.role === 'administrator') return <MainAdminDashboardPage includeVetRequests={false} />;
   return <HerdOverviewPage />;
 }

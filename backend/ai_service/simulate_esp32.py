@@ -27,12 +27,14 @@ payload = {
     }
 }
 
-print("📡 Transmitting 'Cliff Edge' virtual ESP32 packet for C-118...")
+print("Transmitting 'Cliff Edge' virtual ESP32 packet for C-118...")
 
 try:
     response = requests.post(URL, json=payload)
-    print(f"✅ Status Code: {response.status_code}")
-    print("🧠 Backend AI Response:")
-    print(json.dumps(response.json(), indent=2))
-except Exception as e:
-    print(f"❌ Connection failed: {e}")
+    print(f"Status Code: {response.status_code}")
+    if response.status_code == 200:
+        print("Response:", response.json())
+    else:
+        print("Error Details:", response.text)
+except requests.exceptions.RequestException as e:
+    print(f"Connection failed: {e}")

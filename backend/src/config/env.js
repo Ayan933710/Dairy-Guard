@@ -11,6 +11,9 @@ function bool(value, fallback = false) {
   return String(value).toLowerCase() === 'true';
 }
 
+const INSECURE_JWT_FALLBACK = 'insecure_dev_secret_change_me';
+const INSECURE_DEVICE_FALLBACK = 'insecure_dev_device_key';
+
 const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: parseInt(process.env.PORT, 10) || 5000,
@@ -21,22 +24,22 @@ const env = {
   DATABASE_URL: process.env.DATABASE_URL,
   DATABASE_SSL: bool(process.env.DATABASE_SSL, false),
 
-  JWT_SECRET: process.env.JWT_SECRET || 'insecure_dev_secret_change_me',
+  JWT_SECRET: process.env.JWT_SECRET || INSECURE_JWT_FALLBACK,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
   BCRYPT_SALT_ROUNDS: parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 10,
 
-  DEVICE_INGEST_KEY: process.env.DEVICE_INGEST_KEY || 'insecure_dev_device_key',
+  DEVICE_INGEST_KEY: process.env.DEVICE_INGEST_KEY || INSECURE_DEVICE_FALLBACK,
 
   MQTT_ENABLED: bool(process.env.MQTT_ENABLED, false),
   MQTT_BROKER_URL: process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883',
   MQTT_USERNAME: process.env.MQTT_USERNAME || '',
   MQTT_PASSWORD: process.env.MQTT_PASSWORD || '',
-  MQTT_TELEMETRY_TOPIC: process.env.MQTT_TELEMETRY_TOPIC || 'dairyguard/+/telemetry',
+  MQTT_TELEMETRY_TOPIC: process.env.MQTT_TELEMETRY_TOPIC || 'nandi/+/telemetry',
 
   AI_SERVICE_URL: process.env.AI_SERVICE_URL || 'http://localhost:8000',
   AI_SERVICE_TIMEOUT_MS: parseInt(process.env.AI_SERVICE_TIMEOUT_MS, 10) || 5000,
   AI_SERVICE_ENABLED: bool(process.env.AI_SERVICE_ENABLED, false),
-  AI_MODEL_VERSION: process.env.AI_MODEL_VERSION || 'bovineguard_ai_v2.2_calibrated',
+  AI_MODEL_VERSION: process.env.AI_MODEL_VERSION || 'nandi_ai_v2.2_calibrated',
 
   // Deep-link base used in alert messages (WhatsApp/SMS/email) to jump straight to an animal's page.
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -58,14 +61,27 @@ const env = {
   SMTP_PORT: parseInt(process.env.SMTP_PORT, 10) || 587,
   SMTP_USER: process.env.SMTP_USER || '',
   SMTP_PASS: process.env.SMTP_PASS || '',
-  ALERT_FROM_EMAIL: process.env.ALERT_FROM_EMAIL || 'alerts@dairyguard.ai',
+  ALERT_FROM_EMAIL: process.env.ALERT_FROM_EMAIL || 'alerts@nandi.ai',
+
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '',
 };
+
 
 if (!env.DATABASE_URL) {
   // eslint-disable-next-line no-console
   console.warn(
     '[config] DATABASE_URL is not set. Copy .env.example to .env and fill it in before starting the server.'
   );
+}
+
+// CRITICAL: Never run production with known insecure fallback secrets
+if (env.NODE_ENV === 'production') {
+  if (env.JWT_SECRET === INSECURE_JWT_FALLBACK) {
+    throw new Error('FATAL: JWT_SECRET must be set to a strong random value in production. Server refusing to start.');
+  }
+  if (env.DEVICE_INGEST_KEY === INSECURE_DEVICE_FALLBACK) {
+    throw new Error('FATAL: DEVICE_INGEST_KEY must be set to a strong random value in production. Server refusing to start.');
+  }
 }
 
 module.exports = env;

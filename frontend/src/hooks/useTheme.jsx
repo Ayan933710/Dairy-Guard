@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext(null);
-const STORAGE_KEY = 'dairyguard-theme';
+const STORAGE_KEY = 'nandi-theme';
 
 function getInitialTheme() {
   const savedTheme = window.localStorage.getItem(STORAGE_KEY);

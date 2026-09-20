@@ -15,6 +15,6 @@ router.use('/vet', require('./vetRoutes'));
 router.use('/admin', require('./adminRoutes'));
 router.use('/weekly-inputs', require('./weeklyInputRoutes'));
 
-router.get('/health', (req, res) => res.json({ status: 'ok', service: 'dairyguard-ai-backend' }));
+router.get('/health', (req, res) => res.json({ status: 'ok', service: 'nandi-backend' }));
 
 module.exports = router;

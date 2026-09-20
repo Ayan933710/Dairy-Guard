@@ -14,9 +14,9 @@ const env = require('../config/env');
 const DEMO_PASSWORD = 'Password123!';
 
 const USERS = [
-  { full_name: 'Ramesh Patel', email: 'farmer@dairyguard.test', phone: '+919800000001', role: 'farmer', farm_name: 'Patel Dairy Farm', farm_state: 'West Bengal', farm_district: 'Nadia', hub_latitude: 23.4710, hub_longitude: 88.5565 },
-  { full_name: 'Dr. Anjali Rao', email: 'vet@dairyguard.test', phone: '+919800000002', role: 'vet', farm_name: null, vet_state: 'West Bengal', vet_district: 'Nadia', registration_number: 'WB-VET-2048' },
-  { full_name: 'Kolkata Milk Cooperative', email: 'coop@dairyguard.test', phone: '+919800000003', role: 'cooperative_admin', farm_name: null },
+  { full_name: 'Ramesh Patel', email: 'farmer@nandi.test', phone: '+919800000001', role: 'farmer', farm_name: 'Patel Dairy Farm', farm_state: 'West Bengal', farm_district: 'Nadia', hub_latitude: 23.4710, hub_longitude: 88.5565 },
+  { full_name: 'Dr. Anjali Rao', email: 'vet@nandi.test', phone: '+919800000002', role: 'vet', farm_name: null, vet_state: 'West Bengal', vet_district: 'Nadia', registration_number: 'WB-VET-2048' },
+  { full_name: 'Kolkata Milk Cooperative', email: 'coop@nandi.test', phone: '+919800000003', role: 'cooperative_admin', farm_name: null },
 ];
 
 // Mirrors src/data/herd.js on the frontend, plus a synthetic 15-digit RFID tag per animal.
@@ -40,7 +40,7 @@ async function seed() {
     console.log('[seed] clearing existing demo data...');
     await client.query('BEGIN');
     await client.query('TRUNCATE herd_events, recommendations, quarter_readings, risk_history, amr_history, sensor_telemetry, devices, bovine_registry RESTART IDENTITY CASCADE');
-    await client.query('DELETE FROM users WHERE email LIKE $1', ['%@dairyguard.test']);
+    await client.query('DELETE FROM users WHERE email LIKE $1 OR email LIKE $2', ['%@nandi.test', '%@dairyguard.test']);
 
     console.log('[seed] creating demo users...');
     const passwordHash = await bcrypt.hash(DEMO_PASSWORD, env.BCRYPT_SALT_ROUNDS);
@@ -62,6 +62,17 @@ async function seed() {
       farmIds[u.role] = rows[0].farm_id;
     }
     const farmerId = userIds.farmer;
+
+    console.log('[seed] updating main administrator password...');
+    if (env.ADMIN_PASSWORD) {
+      const adminHash = await bcrypt.hash(env.ADMIN_PASSWORD, env.BCRYPT_SALT_ROUNDS);
+      await client.query(
+        `UPDATE users SET password_hash = $1 WHERE email = 'harshkumar56367@gmail.com'`,
+        [adminHash]
+      );
+    } else {
+      console.warn('[seed] WARNING: ADMIN_PASSWORD is not set in .env. Admin account will remain locked.');
+    }
 
     console.log('[seed] creating demo herd...');
     for (const a of HERD) {
