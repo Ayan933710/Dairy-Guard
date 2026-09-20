@@ -30,7 +30,7 @@ unsigned long lastTerminalPrint = 0;
 const unsigned long printInterval = 1000;
 
 unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 10000;
+const unsigned long sendInterval = 30000;
 
 const int MAX_SAMPLES = 100;
 float magnitudeSamples[MAX_SAMPLES];
@@ -63,15 +63,19 @@ float calculateCalibratedRumination()
 void setup()
 {
   Serial.begin(115200);
-  while (!Serial)
-    delay(10);
+  delay(1000);
+  Serial.println("\nStarting collar boot...");
 
-  dallasSensors.begin();
   Wire.begin(I2C_SDA, I2C_SCL);
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x6B);
   Wire.write(0);
   Wire.endTransmission();
+  Serial.println("MPU6050 initialized.");
+
+  dallasSensors.begin();
+  Serial.print("DS18B20 sensors found: ");
+  Serial.println(dallasSensors.getDeviceCount());
 
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
   LoRa.setSPI(SPI);
@@ -79,14 +83,17 @@ void setup()
 
   if (!LoRa.begin(433E6))
   {
-    Serial.println("[FAIL] LoRa initialization failed.");
-    while (1)
-      delay(10);
+    Serial.println("[FAIL] LoRa initialization failed. Check wiring and pins.");
+    Serial.println("CS=5, RST=14, DIO0=26, SCK=18, MISO=19, MOSI=23");
+  }
+  else
+  {
+    LoRa.setSyncWord(0xF3);
+    LoRa.setTxPower(14);
+    Serial.println("LoRa initialized successfully.");
   }
 
-  LoRa.setSyncWord(0xF3);
-  LoRa.setTxPower(14);
-  Serial.println("\nCollar System Ready.");
+  Serial.println("Collar System Ready.");
 }
 
 void loop()
@@ -99,7 +106,7 @@ void loop()
     Wire.beginTransmission(MPU_ADDR);
     Wire.write(0x3B);
     Wire.endTransmission(false);
-    Wire.requestFrom(MPU_ADDR, 6, true);
+    Wire.requestFrom((uint16_t)MPU_ADDR, (uint8_t)6, true);
 
     int16_t AcX = Wire.read() << 8 | Wire.read();
     int16_t AcY = Wire.read() << 8 | Wire.read();
@@ -131,9 +138,10 @@ void loop()
     bufferFull = false;
 
     StaticJsonDocument<200> doc;
-    doc["type"] = "collar";
-    doc["temp"] = serialized(String(tempC, 1));
-    doc["rumination"] = serialized(String(rumination, 1));
+    doc["type"] = "SmartCollar";
+    doc["id"] = "C-118";
+    doc["tmp"] = tempC;
+    doc["rum"] = rumination;
 
     String payload;
     serializeJson(doc, payload);
@@ -142,6 +150,10 @@ void loop()
     LoRa.print(payload);
     LoRa.endPacket();
 
-    Serial.println("\n>>> Sent: " + payload);
+    Serial.print("\n>>> Sent: { \"type\": \"SmartCollar\", \"id\": \"C-118\", \"tmp\": ");
+    Serial.print(tempC, 1);
+    Serial.print(", \"rum\": ");
+    Serial.print(rumination, 1);
+    Serial.println(" }");
   }
 }
