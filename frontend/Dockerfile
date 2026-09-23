@@ -46,6 +46,20 @@ RUN echo 'server { \
         index index.html index.htm; \
         try_files $uri $uri/ /index.html; \
     } \
+    location /api/ { \
+        proxy_pass http://backend:5000/api/; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+    } \
+    location /socket.io/ { \
+        proxy_pass http://backend:5000/socket.io/; \
+        proxy_http_version 1.1; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+    } \
+    location /nandi.apk { \
+        proxy_pass http://backend:5000/nandi.apk; \
+    } \
 }' > /etc/nginx/conf.d/default.conf
 
 # Expose port 80
