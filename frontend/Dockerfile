@@ -25,6 +25,9 @@ ENV VITE_SOCKET_URL=$VITE_SOCKET_URL
 ENV VITE_AI_URL=$VITE_AI_URL
 ENV VITE_ANDROID_APK_URL=$VITE_ANDROID_APK_URL
 
+# Increase Node heap size to prevent Out of Memory errors on low-RAM servers
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
 # Build the application
 RUN npm run build
 
