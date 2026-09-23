@@ -138,7 +138,7 @@ export default function AnimalDetailPage() {
           (import.meta.env.VITE_API_URL
             ? new URL(import.meta.env.VITE_API_URL).origin.replace(/:\d+$/, ':8000')
             : '') ||
-          'http://localhost:8000'
+          'http://172.16.60.135:8000'
         ).replace(/\/+$/, '');
 
         let res = await fetch(`${aiBaseUrl}/api/cow/${encodeURIComponent(targetCowId)}/predict`, {

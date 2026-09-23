@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Check, Eye, EyeOff, Leaf, LockKeyhole, Mail, Phone, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Check, Eye, EyeOff, Leaf, LockKeyhole, Mail, Phone, ShieldCheck, Play } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import ThemeToggle from '../shared/ThemeToggle.jsx';
@@ -45,6 +45,23 @@ export default function AuthPage() {
   const [customVetDesignation, setCustomVetDesignation] = useState('');
   const [preferredLanguage, setPreferredLanguage] = useState(language);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [demoVideoUrl, setDemoVideoUrl] = useState(null);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const baseUrl = getCustomApiUrl() || getApiUrls()[0] || 'http://172.16.60.135:5000/api';
+        // Remove /api if it's there to hit /api/config cleanly
+        const base = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl;
+        const res = await fetch(`${base}/api/config`);
+        const data = await res.json();
+        if (data.demoVideoUrl) setDemoVideoUrl(data.demoVideoUrl);
+      } catch (err) {
+        console.error('Failed to fetch config:', err);
+      }
+    };
+    fetchConfig();
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated && status === 'authenticated' && !submitted) {
@@ -124,6 +141,11 @@ export default function AuthPage() {
           <span className="font-display text-lg tracking-tight">NANDI</span>
         </Link>
         <div className="flex items-center gap-4">
+          {demoVideoUrl && (
+            <a href={demoVideoUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-sky-500/10 px-3 py-1.5 text-xs font-semibold text-sky-400 hover:bg-sky-500/20 transition">
+              <Play size={14} /> Watch Demo
+            </a>
+          )}
           <LanguageSelect />
           <ThemeToggle />
           <Link to="/" className="auth-home-link">{t('backHome')} <ArrowRight size={15} /></Link>
@@ -208,22 +230,24 @@ export default function AuthPage() {
               {formError && (
                 <div style={{ margin: '8px 0', textAlign: 'center' }}>
                   <p className="dashboard-form-error" role="alert">{formError}</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const current = getCustomApiUrl() || getApiUrls()[0] || 'http://172.16.60.135:5000/api';
-                      const entered = window.prompt('Enter your computer Backend URL (e.g. http://172.16.60.135:5000):', current);
-                      if (entered !== null && entered.trim()) {
-                        setCustomApiUrl(entered.trim());
-                        setFormError(null);
-                      }
-                    }}
-                    style={{ background: 'none', border: 'none', color: '#10b981', textDecoration: 'underline', fontSize: '12px', cursor: 'pointer', marginTop: '4px' }}
-                  >
-                    ⚙ Change Backend Server IP
-                  </button>
                 </div>
               )}
+              <div style={{ margin: '6px 0 10px', textAlign: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = getCustomApiUrl() || getApiUrls()[0] || 'http://172.16.60.135:5000/api';
+                    const entered = window.prompt('Enter your computer Backend URL (e.g. http://172.16.60.135:5000):', current);
+                    if (entered !== null && entered.trim()) {
+                      setCustomApiUrl(entered.trim());
+                      setFormError(null);
+                    }
+                  }}
+                  style={{ background: 'none', border: '1px dashed rgba(16, 185, 129, 0.4)', borderRadius: '6px', padding: '4px 10px', color: '#10b981', fontSize: '11px', cursor: 'pointer' }}
+                >
+                  📡 Backend: {getCustomApiUrl() || getApiUrls()[0] || 'http://172.16.60.135:5000'} (Tap to edit)
+                </button>
+              </div>
               <button type="submit" className="auth-submit" disabled={isSubmitting || (mode === 'signup' && !termsAccepted)}>
                 {isSubmitting ? t('pleaseWait') : mode === 'login' ? t('signIn') : t('createAccount')} <ArrowRight size={17} />
               </button>
