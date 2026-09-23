@@ -35,7 +35,8 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://nandi_user:nandi_secure_password@db:5432/nandi_db # Connects to the db container
       - CLIENT_ORIGIN=http://${EC2_PUBLIC_IP} # Loaded from .env in production
-      - JWT_SECRET=GENERATE_A_SECURE_SECRET_HERE # CHANGE THIS IN PRODUCTION
+      - JWT_SECRET=nandi_prod_jwt_s3cr3t_k3y_2026_xK9mP2vL
+      - DEVICE_INGEST_KEY=nandi_prod_device_k3y_2026_qR7wT4nZ
       - AI_SERVICE_URL=http://ai_service:8000
       - AI_SERVICE_ENABLED=true
       - DEMO_VIDEO_URL=${DEMO_VIDEO_URL}
