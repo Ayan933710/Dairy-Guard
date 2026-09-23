@@ -46,7 +46,7 @@ const path = require('path');
 const fs = require('fs');
 
 app.get('/nandi.apk', (req, res) => {
-  const apkPath = path.resolve(__dirname, '../../frontend/public/nandi.apk');
+  const apkPath = path.resolve(__dirname, '../nandi.apk');
   if (fs.existsSync(apkPath)) {
     res.download(apkPath, 'nandi.apk');
   } else {
