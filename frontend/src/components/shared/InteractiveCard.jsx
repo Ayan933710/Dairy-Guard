@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
 const cardVariants = {
@@ -18,6 +18,7 @@ export default function InteractiveCard({
   ...props
 }) {
   const [showShimmer, setShowShimmer] = useState(shimmer);
+  const hasAnimated = useRef(false);
   const pointerX = useMotionValue(0.5);
   const pointerY = useMotionValue(0.5);
   const rotateX = useSpring(useTransform(pointerY, [0, 1], [3, -3]), {
@@ -35,6 +36,12 @@ export default function InteractiveCard({
     return () => window.clearTimeout(shimmerTimer);
   }, [shimmer]);
 
+  // After first animation completes, mark as animated so subsequent
+  // scroll-in/out cycles don't replay the hidden→visible transition.
+  function handleAnimationComplete() {
+    hasAnimated.current = true;
+  }
+
   function handlePointerMove(event) {
     const bounds = event.currentTarget.getBoundingClientRect();
     pointerX.set((event.clientX - bounds.left) / bounds.width);
@@ -49,10 +56,14 @@ export default function InteractiveCard({
   return (
     <motion.div
       variants={variants}
+      // After the first entrance animation, skip future "hidden" resets
+      // so cards stay visible when scrolled out of and back into view.
+      initial={hasAnimated.current ? 'visible' : undefined}
       style={{ rotateX, rotateY, transformPerspective: 900 }}
       onMouseMove={handlePointerMove}
       onMouseLeave={handlePointerLeave}
-      className={`relative will-change-transform ${className}`}
+      onAnimationComplete={handleAnimationComplete}
+      className={`relative ${className}`}
       {...props}
     >
       {showShimmer && <span className="card-shimmer" aria-hidden="true" />}

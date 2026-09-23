@@ -1,0 +1,9 @@
+{
+  "appId": "com.nandi.app",
+  "appName": "NANDI",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  }
+}

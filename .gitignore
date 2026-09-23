@@ -10,3 +10,5 @@ dist/
 build/
 .next/
 *.exe
+*.idsig
+.idea/

@@ -15,7 +15,7 @@ from mastitis import predict_on_spot
 load_dotenv()
 
 # Safely encoded database password
-SQLALCHEMY_DATABASE_URL = "postgresql://nandi_user:nandi%40hackcypher@localhost:5432/nandi_db"
+SQLALCHEMY_DATABASE_URL = "postgresql://nandi_user:nandi%5Fhackcypher@localhost:5432/nandi_db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -23,16 +23,14 @@ Base = declarative_base()
 # Hardcoded to bypass the 401 error
 DEVICE_INGEST_KEY = "esp32_hardware_key_1234"
 
-# CORS: restrict to configured origins
-CLIENT_ORIGIN = os.getenv("CLIENT_ORIGIN", "http://localhost:5173").split(",")
-
+# CORS: allow origins including Capacitor / mobile and local network
 app = FastAPI(title="NANDI AI Service")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in CLIENT_ORIGIN],
+    allow_origin_regex=r".*",
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
