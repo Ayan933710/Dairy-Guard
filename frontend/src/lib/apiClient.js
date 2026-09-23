@@ -8,18 +8,48 @@
  * - Throws an Error with a readable message on non-2xx responses so
  *   callers can just `.catch(err => setError(err.message))`.
  */
-const DEFAULT_API_URLS = [
-  import.meta.env.VITE_API_URL,
-  'http://localhost:5000/api',
-  'http://localhost:5001/api',
-  'http://localhost:5002/api',
-  'http://localhost:5003/api',
-  'http://localhost:3000/api',
-].filter(Boolean).map((value) => value.replace(/\/+$/, ''));
+export function getCustomApiUrl() {
+  try {
+    return localStorage.getItem('nandi_custom_api_url') || '';
+  } catch {
+    return '';
+  }
+}
 
-const API_URL = DEFAULT_API_URLS[0] || 'http://localhost:5000/api';
+export function setCustomApiUrl(url) {
+  try {
+    if (url) localStorage.setItem('nandi_custom_api_url', url.trim());
+    else localStorage.removeItem('nandi_custom_api_url');
+  } catch {
+    // ignore
+  }
+}
+
+export function getApiUrls() {
+  const custom = getCustomApiUrl();
+  const configured = import.meta.env.VITE_API_URL?.trim();
+  const fallbackUrls = [
+    'http://172.16.60.135:5000/api',
+    'http://localhost:5000/api',
+    'http://10.0.2.2:5000/api',
+    'http://localhost:5001/api',
+    'http://localhost:5002/api',
+    'http://localhost:5003/api',
+    'http://localhost:3000/api',
+  ];
+  return Array.from(
+    new Set([
+      ...(custom ? [custom.replace(/\/+$/, '') + (custom.endsWith('/api') ? '' : '/api')] : []),
+      ...(configured ? [configured] : []),
+      ...fallbackUrls,
+    ])
+  ).map((value) => value.replace(/\/+$/, ''));
+}
+
+const DEFAULT_API_URLS = getApiUrls();
+const API_URL = DEFAULT_API_URLS[0] || 'http://172.16.60.135:5000/api';
 const TOKEN_STORAGE_KEY = 'nandi_token';
-const REQUEST_TIMEOUT_MS = 10000;
+const REQUEST_TIMEOUT_MS = 3500;
 
 export function getToken() {
   try {
@@ -45,7 +75,7 @@ async function request(path, { method = 'GET', body, headers = {}, auth = true }
 
   let lastNetworkError = null;
 
-  for (const baseUrl of DEFAULT_API_URLS) {
+  for (const baseUrl of getApiUrls()) {
     let response;
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);

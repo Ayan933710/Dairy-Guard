@@ -18,7 +18,13 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: env.CLIENT_ORIGIN,
+    origin: (origin, callback) => {
+      // In dev or from mobile webviews / tools without origin, allow request
+      if (!origin || env.NODE_ENV !== 'production' || env.CLIENT_ORIGIN.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
@@ -36,8 +42,29 @@ app.use('/api', apiLimiter);
 
 app.use('/api', apiRoutes);
 
+const path = require('path');
+const fs = require('fs');
+
+app.get('/nandi.apk', (req, res) => {
+  const apkPath = path.resolve(__dirname, '../../frontend/public/nandi.apk');
+  if (fs.existsSync(apkPath)) {
+    res.download(apkPath, 'nandi.apk');
+  } else {
+    res.status(404).json({ error: 'APK not found. Please build the Android app first.' });
+  }
+});
+
+app.get('/api/config', (req, res) => {
+  res.json({
+    demoVideoUrl: process.env.DEMO_VIDEO_URL || null
+  });
+});
+
 app.get('/', (req, res) => {
-  res.json({ message: 'NANDI backend is running. See /api/health for status.' });
+  res.json({
+    message: 'NANDI backend is running. See /api/health for status.',
+    apkDownload: 'http://172.16.60.135:5000/nandi.apk',
+  });
 });
 
 app.use(notFound);

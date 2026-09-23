@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Plus, X } from 'lucide-react';
@@ -197,6 +197,10 @@ export default function HerdOverviewPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: animals, loading, error, refetch } = useFetch(fetchHerd, []);
   const safeAnimals = Array.isArray(animals) ? animals : [];
+  // Track whether the entrance animations have already played.
+  // After first mount, set initial to false so scroll doesn't replay them.
+  const hasMounted = useRef(false);
+  useEffect(() => { hasMounted.current = true; }, []);
 
   async function addAnimal(payload) {
     await createAnimal(payload);
@@ -240,7 +244,7 @@ export default function HerdOverviewPage() {
       </section>
       <motion.div
         variants={cardGroupVariants}
-        initial="hidden"
+        initial={hasMounted.current ? false : 'hidden'}
         animate="visible"
         className="dashboard-stat-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
       >
@@ -263,7 +267,7 @@ export default function HerdOverviewPage() {
         </div>
         <motion.div
           variants={cardGroupVariants}
-          initial="hidden"
+          initial={hasMounted.current ? false : 'hidden'}
           animate="visible"
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >

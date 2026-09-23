@@ -5,15 +5,31 @@
  * stored JWT changes (e.g. after login/logout).
  */
 import { io } from 'socket.io-client';
-import { getToken } from './apiClient.js';
+import { getToken, getApiUrls } from './apiClient.js';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+export function getSocketUrl() {
+  const configured = import.meta.env.VITE_SOCKET_URL?.trim();
+  if (configured) return configured;
+  const urls = getApiUrls();
+  if (urls.length > 0) {
+    return urls[0].replace(/\/api\/?$/, '');
+  }
+  return 'http://172.16.60.135:5000';
+}
 
 let socket = null;
+let currentSocketUrl = null;
 
 export function getSocket() {
-  if (!socket) {
-    socket = io(SOCKET_URL, {
+  const targetUrl = getSocketUrl();
+  if (!socket || currentSocketUrl !== targetUrl) {
+    if (socket) {
+      try {
+        socket.disconnect();
+      } catch (_) {}
+    }
+    currentSocketUrl = targetUrl;
+    socket = io(targetUrl, {
       autoConnect: false,
       auth: (cb) => cb({ token: getToken() }),
       transports: ['websocket', 'polling'],

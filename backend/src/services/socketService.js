@@ -24,7 +24,7 @@ let io = null;
 function initSocket(httpServer) {
   io = new Server(httpServer, {
     cors: {
-      origin: env.CLIENT_ORIGIN,
+      origin: (origin, callback) => callback(null, true),
       credentials: true,
     },
   });

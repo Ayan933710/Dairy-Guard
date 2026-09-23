@@ -11,6 +11,7 @@ import AnimatedChartTooltip, { AnimatedActiveDot } from '../shared/AnimatedChart
 import { LoadingState, ErrorState } from '../shared/AsyncState.jsx';
 import { useFetch } from '../../lib/useFetch.js';
 import { fetchAnimalDetail, fetchRecommendations, removeAnimal } from '../../lib/herdApi.js';
+import { api } from '../../lib/apiClient.js';
 import { connectSocket } from '../../lib/socket.js';
 
 export default function AnimalDetailPage() {
@@ -123,26 +124,45 @@ export default function AnimalDetailPage() {
     setRunError('');
     try {
       setIsRunning(true);
-      const targetCowId = animal?.id || animalId || 'C-118';
+      const targetCowId = animal?.displayTag || animal?.display_tag || animal?.id || animalId || 'C-118';
 
-      let res = await fetch(`http://localhost:8000/api/cow/${targetCowId}/predict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      let data = null;
 
-      if (!res.ok && res.status === 404 && targetCowId !== 'C-118') {
-        res = await fetch('http://localhost:8000/api/cow/C-118/predict', {
+      // 1. Try calling through the backend API proxy (works on mobile APK, LAN, and desktop)
+      try {
+        data = await api.post(`/cow/${encodeURIComponent(targetCowId)}/predict`, {});
+      } catch (proxyErr) {
+        // 2. Fallback to direct FastAPI call with dynamic host resolution
+        const aiBaseUrl = (
+          import.meta.env.VITE_AI_URL?.trim() ||
+          (import.meta.env.VITE_API_URL
+            ? new URL(import.meta.env.VITE_API_URL).origin.replace(/:\d+$/, ':8000')
+            : '') ||
+          'http://172.16.60.135:8000'
+        ).replace(/\/+$/, '');
+
+        let res = await fetch(`${aiBaseUrl}/api/cow/${encodeURIComponent(targetCowId)}/predict`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });
+
+        if (!res.ok && res.status === 404 && targetCowId !== 'C-118') {
+          res = await fetch(`${aiBaseUrl}/api/cow/C-118/predict`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        if (!res.ok) {
+          throw new Error(proxyErr.message || `Server error: ${res.status}`);
+        }
+
+        data = await res.json();
       }
 
-      if (!res.ok) {
-        throw new Error(`Server error: ${res.status}`);
+      if (data) {
+        setLivePrediction(data);
       }
-
-      const data = await res.json();
-      setLivePrediction(data);
     } catch (err) {
       setRunError(err.message || 'Could not run a new prediction.');
     } finally {
@@ -322,13 +342,16 @@ export default function AnimalDetailPage() {
       )}
 
       <div className="rounded-xl border border-milk/10 bg-night-card/60 p-5">
-        <p className="mb-4 font-display text-lg text-milk">{t('riskTrend30')}</p>
+        <div className="mb-4 flex items-center justify-between">
+          <p className="font-display text-lg text-milk">{t('riskTrend30')}</p>
+          <span className="text-xs text-milk-dim">{t('riskAxis')}</span>
+        </div>
         <div className="h-64">
           {activeTrend.length === 0 ? (
             <p className="grid h-full place-items-center text-xs text-milk-dim">{t('noRiskHistory')}</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={activeTrend} margin={{ bottom: 18 }}>
+              <LineChart data={activeTrend} margin={{ top: 8, right: 12, left: -10, bottom: 8 }}>
                 <CartesianGrid stroke="#E2E8F0" vertical={false} opacity={0.1} />
                 <XAxis
                   dataKey="day"
@@ -337,12 +360,18 @@ export default function AnimalDetailPage() {
                   tickLine={false}
                   interval="preserveStartEnd"
                   minTickGap={28}
-                  angle={-35}
+                  angle={-30}
                   textAnchor="end"
-                  height={40}
-                  label={{ value: t('dateAxis'), position: 'insideBottom', offset: -8, fill: '#64748B', fontSize: 11 }}
+                  height={36}
                 />
-                <YAxis stroke="#64748B" fontSize={11} tickLine={false} width={30} domain={[0, 100]} label={{ value: t('riskAxis'), angle: -90, position: 'insideLeft', fill: '#64748B', fontSize: 11 }} />
+                <YAxis
+                  stroke="#64748B"
+                  fontSize={11}
+                  tickLine={false}
+                  width={36}
+                  domain={[0, 100]}
+                  ticks={[0, 25, 50, 75, 100]}
+                />
                 <Tooltip content={<AnimatedChartTooltip />} />
                 <Line
                   type="monotone"

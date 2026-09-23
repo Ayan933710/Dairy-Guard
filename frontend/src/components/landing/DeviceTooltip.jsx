@@ -13,7 +13,7 @@ export default function DeviceTooltip({ device, compact = false }) {
       <p className="mt-0.5 text-[11px] text-sky-600">{device.tagline}</p>
       <ul className="mt-2 space-y-1">
         {device.specs.map((s) => (
-          <li key={s.label} className="rounded-md px-1 py-0.5 text-[11px] leading-snug text-theme-text-muted transition-all duration-200 hover:scale-105 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700">
+          <li key={s.label} className="rounded-md px-1 py-0.5 text-[11px] leading-snug text-theme-text-muted transition-all duration-200 hover:scale-105 hover:border-sky-300 dark:hover:border-sky-600 hover:bg-sky-500/10 dark:hover:bg-sky-400/15 hover:text-sky-700 dark:hover:text-sky-300">
             <span className="text-theme-text-dark">{s.label}:</span> {s.value}
           </li>
         ))}

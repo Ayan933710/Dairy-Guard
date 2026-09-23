@@ -136,8 +136,12 @@ export default function DashboardLayout() {
       <AmbientBackground variant="dashboard" />
       <div className="dashboard-background-mesh" aria-hidden="true" />
       <aside className="z-10 dashboard-sidebar sticky top-0 hidden h-screen w-60 shrink-0 self-start border-r border-slate-200 bg-theme-bg-card px-4 py-6 shadow-sm md:flex md:flex-col">
-        <div className="flex items-center gap-2 px-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-theme-primary" />
+        <div className="flex items-center gap-2.5 px-2">
+          <img
+            src="/brand-icon.png"
+            alt="NANDI logo"
+            className="h-7 w-7 rounded-full border border-sky-400/50 bg-white object-contain p-0.5 shadow-sm"
+          />
           <span className="font-display text-base text-theme-text-dark">
             NANDI
           </span>
@@ -352,19 +356,24 @@ export default function DashboardLayout() {
             <span className="h-2 w-2 rounded-full bg-theme-risk-none" />
             {t('gatewayOnline')}
           </div>}
-          <div className="dashboard-header-controls flex items-center gap-3">
-            {user && (
-              <span className="hidden text-xs text-theme-text-muted sm:inline">
-                {user.full_name} <span className="capitalize text-theme-text-dark">({user.role.replace('_', ' ')})</span>
-                {user.farm_id && <span className="ml-2 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] tracking-wide text-theme-text-dark">ID: {user.farm_id}</span>}
-                {isVet && user.registration_number && <span className="ml-2 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] tracking-wide text-theme-text-dark">Reg: {user.registration_number}</span>}
-                {user.hub_latitude != null && user.hub_longitude != null && <LocationLink className="ml-2 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] tracking-wide text-theme-text-dark" latitude={user.hub_latitude} longitude={user.hub_longitude} />}
+          <div className="dashboard-header-controls flex items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => { setIsAccountPanelOpen(true); setIsAccountEditing(false); }}
+              className="focus-ring flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 px-2 py-1 text-left transition hover:border-sky-300 dark:hover:border-sky-700 hover:bg-sky-50/80 dark:hover:bg-sky-900/40"
+              title={t('myAccount') || 'My Account'}
+            >
+              <div className="grid h-6 w-6 place-items-center rounded-full bg-theme-primary/10 text-[9px] font-bold text-theme-primary">
+                {((accountProfile.full_name || 'U').split(' ').map((part) => part[0]).filter(Boolean).slice(0, 2).join('') || 'U').toUpperCase()}
+              </div>
+              <span className="hidden text-xs font-semibold text-theme-text-dark sm:inline max-w-[120px] truncate">
+                {accountProfile.full_name}
               </span>
-            )}
+            </button>
             <ThemeToggle />
             <LanguageSelect />
             <button type="button" onClick={handleLogout} className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-theme-text-muted transition hover:border-red-300 hover:text-red-500">
-              <LogOut size={14} /> {t('logOut')}
+              <LogOut size={14} /> <span className="hidden sm:inline">{t('logOut')}</span>
             </button>
           </div>
         </header>

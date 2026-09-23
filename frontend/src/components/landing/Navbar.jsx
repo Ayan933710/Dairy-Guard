@@ -13,8 +13,12 @@ export default function Navbar({ onLogin, onSignup, onEnterPlatform }) {
       transition={{ duration: 0.6, ease: 'easeOut' }}
       className="landing-nav absolute inset-x-0 top-0 z-30 flex items-center justify-between px-6 py-5 md:px-12 lg:px-16"
     >
-      <div className="flex items-center gap-2">
-        <span className="brand-mark"><span /></span>
+      <div className="flex items-center gap-2.5">
+        <img
+          src="/brand-icon.png"
+          alt="NANDI logo"
+          className="h-7 w-7 rounded-full border border-sky-400/50 bg-white object-contain p-0.5 shadow-sm transition-transform hover:scale-105"
+        />
         <span className="brand-name font-display text-lg tracking-tight">
           NANDI
         </span>

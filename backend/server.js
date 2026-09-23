@@ -26,13 +26,15 @@ function startServer(port) {
     throw error;
   });
 
-  server.listen(port, () => {
+  server.listen(port, '0.0.0.0', () => {
     // Only initialize Socket.io and MQTT after successful port binding
     // to avoid creating duplicate listeners on port retries
     initSocket(server);
     startMqttBridge();
 
-    logger.info(`NANDI backend listening on http://localhost:${port}`);
+    logger.info(`NANDI backend listening on http://0.0.0.0:${port}`);
+    logger.info(`Local URL: http://localhost:${port}`);
+    logger.info(`Wi-Fi / Phone APK URL: http://172.16.60.135:${port}`);
     logger.info(`Environment: ${env.NODE_ENV}`);
     logger.info(`Allowed CORS origins: ${env.CLIENT_ORIGIN.join(', ')}`);
   });

@@ -55,7 +55,7 @@ function DevicePanel({ title, subtitle, viewerType, parts }) {
                 key={step}
                 whileHover={{ x: 5, scale: 1.03 }}
                 transition={{ type: 'spring', stiffness: 350, damping: 24 }}
-                className="device-flow-step rounded-r-md transition-colors hover:bg-sky-50/70"
+                className="device-flow-step rounded-r-md transition-colors hover:bg-sky-500/10 active:bg-sky-500/20"
               >
                 <span className="text-sky-600">0{stepIndex + 1}</span>
                 <p>{step}</p>
