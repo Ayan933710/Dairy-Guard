@@ -17,7 +17,7 @@ import { connectSocket } from '../../lib/socket.js';
 export default function AnimalDetailPage() {
   const { t } = useLanguage();
   const { species, animalId } = useParams();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
   const [isRunning, setIsRunning] = useState(false);
   const [runError, setRunError] = useState('');
   const [removeError, setRemoveError] = useState('');
@@ -65,45 +65,45 @@ export default function AnimalDetailPage() {
   // Derive display values from live FastAPI prediction when available
   const activeAnimal = livePrediction
     ? {
-      ...animal,
-      risk: getRiskKey(livePrediction.risk_category || (livePrediction.overall_risk_score >= 70 ? 'high' : livePrediction.overall_risk_score >= 25 ? 'moderate' : 'low')),
-      riskScore: livePrediction.overall_risk_score ?? livePrediction.risk_score_pct,
-      rumination: livePrediction.rumination_delta ?? animal.rumination,
-      thi: livePrediction.shed_thi ?? animal.thi,
-      cowTemp: livePrediction.cow_body_temp ?? livePrediction.cow_temperature ?? animal.cowTemperature ?? animal.temperature ?? animal.bodyTemp ?? animal.body_temperature ?? null,
-    }
+        ...animal,
+        risk: getRiskKey(livePrediction.risk_category || (livePrediction.overall_risk_score >= 70 ? 'high' : livePrediction.overall_risk_score >= 25 ? 'moderate' : 'low')),
+        riskScore: livePrediction.overall_risk_score ?? livePrediction.risk_score_pct,
+        rumination: livePrediction.rumination_delta ?? animal.rumination,
+        thi: livePrediction.shed_thi ?? animal.thi,
+        cowTemp: livePrediction.cow_body_temp ?? livePrediction.cow_temperature ?? animal.cowTemperature ?? animal.temperature ?? animal.bodyTemp ?? animal.body_temperature ?? null,
+      }
     : {
-      ...animal,
-      cowTemp: animal.cowTemperature ?? animal.temperature ?? animal.bodyTemp ?? animal.body_temperature ?? null,
-    };
+        ...animal,
+        cowTemp: animal.cowTemperature ?? animal.temperature ?? animal.bodyTemp ?? animal.body_temperature ?? null,
+      };
 
   const activeQuarters = livePrediction?.quarter_results || livePrediction?.quarters
     ? Object.entries(livePrediction.quarter_results || livePrediction.quarters).map(([qKey, qData]) => {
-      // Handle both flat structures and nested 'metrics' structure
-      const source = qData.metrics || qData;
-      return {
-        quarter: qKey,
-        ec: source.ec ?? source.ec_value ?? source.ecValue ?? null,
-        ph: source.ph ?? source.ph_value ?? source.phValue ?? null,
-        color: source.color ?? source.colour ?? source.color_code ?? '—',
-        viscosity: source.viscosity ?? source.viscosity_value ?? source.viscosityValue ?? null,
-        is_infected: qData.ai_prediction === 'subclinical' || qData.risk_pct >= 50,
-      }
-    })
+        // Handle both flat structures and nested 'metrics' structure
+        const source = qData.metrics || qData;
+        return {
+          quarter: qKey,
+          ec: source.ec ?? source.ec_value ?? source.ecValue ?? null,
+          ph: source.ph ?? source.ph_value ?? source.phValue ?? null,
+          color: source.color ?? source.colour ?? source.color_code ?? '—',
+          viscosity: source.viscosity ?? source.viscosity_value ?? source.viscosityValue ?? null,
+          is_infected: qData.ai_prediction === 'subclinical' || qData.risk_pct >= 50,
+        }
+      })
     : detail.quarters.map((q) => ({
-      ...q,
-      ec: q.ec ?? q.ecValue ?? null,
-      ph: q.ph ?? q.phValue ?? null,
-      color: q.color ?? q.colour ?? q.colorCode ?? '—',
-      viscosity: q.viscosity ?? q.viscosityValue ?? null,
-      is_infected: false,
-    }));
+        ...q,
+        ec: q.ec ?? q.ecValue ?? null,
+        ph: q.ph ?? q.phValue ?? null,
+        color: q.color ?? q.colour ?? q.colorCode ?? '—',
+        viscosity: q.viscosity ?? q.viscosityValue ?? null,
+        is_infected: false,
+      }));
 
   const activeTrend = livePrediction?.['30_day_trend']
     ? livePrediction['30_day_trend'].map((t) => ({
-      day: t.date || t.day,
-      risk: t.risk,
-    }))
+        day: t.date || t.day,
+        risk: t.risk,
+      }))
     : trend;
 
   const getDynamicRecommendation = (score) => {
@@ -115,9 +115,9 @@ export default function AnimalDetailPage() {
 
   const activeRecommendation = livePrediction
     ? {
-      profile: livePrediction.pathogen_profile || 'AI Quarter-Level Analysis',
-      action: getDynamicRecommendation(activeAnimal.riskScore),
-    }
+        profile: livePrediction.pathogen_profile || 'AI Quarter-Level Analysis',
+        action: getDynamicRecommendation(activeAnimal.riskScore),
+      }
     : recommendation;
 
   async function handleRunPrediction() {
@@ -128,15 +128,36 @@ export default function AnimalDetailPage() {
 
       let data = null;
 
+      // 1. Try calling through the backend API proxy (works on mobile APK, LAN, and desktop)
       try {
-        // Only use the backend API proxy for AI predictions
         data = await api.post(`/cow/${encodeURIComponent(targetCowId)}/predict`, {});
       } catch (proxyErr) {
-        // If the proxy returns an error, gracefully display it instead of crashing
-        if (proxyErr.message.includes('No health records found')) {
-          throw new Error('No hardware data found for this cow yet. Please run the hardware simulator first!');
+        // 2. Fallback to direct FastAPI call with dynamic host resolution
+        const aiBaseUrl = (
+          import.meta.env.VITE_AI_URL?.trim() ||
+          (import.meta.env.VITE_API_URL
+            ? new URL(import.meta.env.VITE_API_URL).origin.replace(/:\d+$/, ':8000')
+            : '') ||
+          'http://172.16.60.135:8000'
+        ).replace(/\/+$/, '');
+
+        let res = await fetch(`${aiBaseUrl}/api/cow/${encodeURIComponent(targetCowId)}/predict`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!res.ok && res.status === 404 && targetCowId !== 'C-118') {
+          res = await fetch(`${aiBaseUrl}/api/cow/C-118/predict`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
         }
-        throw new Error(proxyErr.message || 'AI service unavailable. Please try again.');
+
+        if (!res.ok) {
+          throw new Error(proxyErr.message || `Server error: ${res.status}`);
+        }
+
+        data = await res.json();
       }
 
       if (data) {

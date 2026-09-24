@@ -66,7 +66,7 @@ export default function SpeciesListPage() {
                   </div>
                   <div>
                     <dt>{t('riskScore')}</dt>
-                    <dd className="mt-1 font-display text-sm text-milk">{a.riskScore != null ? `${a.riskScore}%` : '—'}</dd>
+                    <dd className="mt-1 font-display text-sm text-milk">{a.riskScore}%</dd>
                   </div>
                 </dl>
               </Link>

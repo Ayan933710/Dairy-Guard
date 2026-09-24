@@ -53,7 +53,7 @@ function HerdCard({ animal }) {
               border: `1px solid ${riskColor[animal.risk]}55`,
             }}
           >
-            {animal.riskScore != null ? `${animal.riskScore}%` : '—'}
+            {animal.riskScore}%
           </div>
         </div>
         <div className="mt-4">
@@ -311,8 +311,8 @@ export default function HerdOverviewPage() {
                     <td className="px-4 py-3">
                       <RiskBadge risk={a.risk} />
                     </td>
-                    <td className="px-4 py-3 text-milk">{a.riskScore != null ? `${a.riskScore}%` : '—'}</td>
-                    <td className="px-4 py-3 text-milk-dim">{a.rumination != null ? `${a.rumination}%` : '—'}</td>
+                    <td className="px-4 py-3 text-milk">{a.riskScore}%</td>
+                    <td className="px-4 py-3 text-milk-dim">{a.rumination}%</td>
                     <td className="px-4 py-3 text-right">
                       <Link
                         to={`/dashboard/species/${a.species}/${a.id}`}
