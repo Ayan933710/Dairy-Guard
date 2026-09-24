@@ -19,20 +19,14 @@ const USERS = [
   { full_name: 'Kolkata Milk Cooperative', email: 'coop@nandi.test', phone: '+919800000003', role: 'cooperative_admin', farm_name: null },
 ];
 
-// Mirrors src/data/herd.js on the frontend, plus a synthetic 15-digit RFID tag per animal.
+// Animal identity only — NO fake sensor data. Real values come from hardware.
 const HERD = [
-  { display_tag: 'C-104', rfid: '900000000000104', name: 'Gauri', species: 'cow', breed: 'Sahiwal Cross', age: 5, lactation: 3, risk: 'High Risk', score: 84, rumination: -28, thi: 78 },
-  { display_tag: 'C-118', rfid: '900000000000118', name: 'Radha', species: 'cow', breed: 'Gir', age: 4, lactation: 2, risk: 'Moderate Risk', score: 58, rumination: -12, thi: 71 },
-  { display_tag: 'C-129', rfid: '900000000000129', name: 'Lakshmi', species: 'cow', breed: 'Crossbred HF', age: 6, lactation: 4, risk: 'No Risk', score: 9, rumination: 2, thi: 62 },
-  { display_tag: 'B-021', rfid: '900000000000021', name: 'Kajal', species: 'buffalo', breed: 'Murrah', age: 7, lactation: 5, risk: 'Low Risk', score: 32, rumination: -6, thi: 69 },
-  { display_tag: 'B-034', rfid: '900000000000034', name: 'Kali', species: 'buffalo', breed: 'Mehsana', age: 5, lactation: 3, risk: 'No Risk', score: 6, rumination: 1, thi: 64 },
+  { display_tag: 'C-104', rfid: '900000000000104', name: 'Gauri', species: 'cow', breed: 'Sahiwal Cross', age: 5, lactation: 3 },
+  { display_tag: 'C-118', rfid: '900000000000118', name: 'Radha', species: 'cow', breed: 'Gir', age: 4, lactation: 2 },
+  { display_tag: 'C-129', rfid: '900000000000129', name: 'Lakshmi', species: 'cow', breed: 'Crossbred HF', age: 6, lactation: 4 },
+  { display_tag: 'B-021', rfid: '900000000000021', name: 'Kajal', species: 'buffalo', breed: 'Murrah', age: 7, lactation: 5 },
+  { display_tag: 'B-034', rfid: '900000000000034', name: 'Kali', species: 'buffalo', breed: 'Mehsana', age: 5, lactation: 3 },
 ];
-
-const QUARTERS = ['LF', 'RF', 'LR', 'RR']; // cows and buffaloes both have 4 mammary quarters
-
-function randDelta(base) {
-  return +(base + Math.random() * 4).toFixed(2);
-}
 
 async function seed() {
   const client = await pool.connect();
@@ -74,49 +68,19 @@ async function seed() {
       console.warn('[seed] WARNING: ADMIN_PASSWORD is not set in .env. Admin account will remain locked.');
     }
 
-    console.log('[seed] creating demo herd...');
+    console.log('[seed] registering herd (no fake sensor data — values come from hardware)...');
     for (const a of HERD) {
       const { rows } = await client.query(
         `INSERT INTO bovine_registry
            (display_tag, rfid_tag, name, species, breed, age, lactation_number, owner_id,
              current_risk_level, current_risk_score, rumination_delta_pct, thi,
              current_mastitis_status, current_amr_status, current_amr_score)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,
+                   NULL, NULL, NULL, NULL, 'clear', 'stable', NULL)
          RETURNING id`,
-        [a.display_tag, a.rfid, a.name, a.species, a.breed, a.age, a.lactation, farmerId,
-            a.risk, a.score, a.rumination, a.thi, a.risk === 'High Risk' ? 'high' : 'clear', a.risk === 'High Risk' ? 'rising' : 'stable', a.risk === 'High Risk' ? 68 : 12]
+        [a.display_tag, a.rfid, a.name, a.species, a.breed, a.age, a.lactation, farmerId]
       );
       const animalId = rows[0].id;
-
-      // Quarter-level deltas (udder diagram) - 4 mammary quarters per animal
-      for (const q of QUARTERS) {
-        const isHotspot = a.risk === 'High Risk' && q === 'LF';
-        await client.query(
-          `INSERT INTO quarter_readings (animal_id, quarter, ec_delta_pct, temp_delta_c, yield_drop_pct)
-           VALUES ($1,$2,$3,$4,$5)`,
-          [animalId, q, isHotspot ? 22 : randDelta(4), isHotspot ? 0.9 : +(Math.random() * 0.3).toFixed(2), isHotspot ? 15 : Math.round(Math.random() * 5)]
-        );
-      }
-
-      // 30-day risk score trend
-      let v = 20 + Math.random() * 10;
-      const driftUp = a.risk === 'High Risk' || a.risk === 'Moderate Risk';
-      for (let i = 30; i >= 1; i -= 1) {
-        v += (driftUp ? 1 : -0.3) * (Math.random() * 2);
-        const score = Math.max(2, Math.min(96, Math.round(v)));
-        await client.query(
-          `INSERT INTO risk_history (animal_id, risk_score, risk_level, source, recorded_at)
-           VALUES ($1,$2,$3,'seed_data', now() - ($4 || ' days')::interval)`,
-          [animalId, score, a.risk, i]
-        );
-      }
-
-      await client.query(
-        `INSERT INTO amr_history (animal_id, amr_score, amr_status, recorded_at)
-         VALUES ($1,$2,$3, now() - interval '1 year'), ($1,$4,$5, now())`,
-        [animalId, a.risk === 'High Risk' ? 48 : 8, a.risk === 'High Risk' ? 'rising' : 'stable',
-          a.risk === 'High Risk' ? 68 : 12, a.risk === 'High Risk' ? 'rising' : 'stable']
-      );
 
       // Register the two field devices for this animal
       await client.query(
@@ -131,36 +95,8 @@ async function seed() {
       );
     }
 
-    console.log('[seed] creating recommendations...');
-    const recs = [
-      { tag: 'C-104', profile: 'Acute / Environmental', action: 'Immediate veterinary examination; supportive anti-inflammatory therapy; replace bedding in this stall.', urgency: 'High Risk' },
-      { tag: 'C-118', profile: 'Subclinical / Contagious', action: "Post-milking chlorhexidine teat dip; milk this cow last to avoid cross-transmission via the milker's hands.", urgency: 'Moderate Risk' },
-      { tag: 'B-021', profile: 'Heat-stress linked', action: 'Increase shed ventilation; shift milking to early morning while THI is elevated.', urgency: 'Moderate Risk' },
-    ];
-    for (const r of recs) {
-      const { rows } = await client.query('SELECT id FROM bovine_registry WHERE display_tag = $1', [r.tag]);
-      await client.query(
-        `INSERT INTO recommendations (animal_id, profile, action, urgency) VALUES ($1,$2,$3,$4)`,
-        [rows[0].id, r.profile, r.action, r.urgency]
-      );
-    }
-
-    console.log('[seed] creating history log events...');
-    const events = [
-      { tag: 'C-104', date: '2026-08-30', text: 'Risk escalated to High Risk (84%)' },
-      { tag: 'C-104', date: '2026-08-28', text: 'Quarter 3 EC delta crossed +18% threshold' },
-      { tag: 'C-118', date: '2026-08-27', text: 'Rumination declined 12% over 48h' },
-      { tag: 'B-021', date: '2026-08-25', text: 'THI exceeded 70 for 3 consecutive days' },
-      { tag: 'B-021', date: '2026-08-20', text: 'Monthly probe calibration completed' },
-      { tag: 'C-129', date: '2026-08-14', text: 'Clear CMT result, herd baseline updated' },
-    ];
-    for (const e of events) {
-      const { rows } = await client.query('SELECT id FROM bovine_registry WHERE display_tag = $1', [e.tag]);
-      await client.query(
-        `INSERT INTO herd_events (animal_id, event_text, event_date) VALUES ($1,$2,$3)`,
-        [rows[0].id, e.text, e.date]
-      );
-    }
+    // No fake recommendations or history events — these will be generated
+    // automatically by the backend when real hardware data arrives.
 
     await client.query('COMMIT');
     console.log('\n[seed] Done! Demo accounts (all use password: %s):', DEMO_PASSWORD);
