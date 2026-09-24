@@ -47,7 +47,7 @@ async function seed() {
     const userIds = {};
     const farmIds = {};
     for (const u of USERS) {
-      const farmId = u.role === 'farmer' ? generateFarmId() : null;
+      const farmId = u.role === 'farmer' ? 'FARM0001' : null;
       const { rows } = await client.query(
         `INSERT INTO users (full_name, email, password_hash, role, phone, farm_name, farm_id,
                            vet_state, vet_district, registration_number, farm_state, farm_district,

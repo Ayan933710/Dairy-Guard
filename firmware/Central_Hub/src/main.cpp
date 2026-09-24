@@ -40,9 +40,9 @@ SPIClass sdSPI(HSPI);
 Adafruit_BME280 bme;
 
 // --- Cloud Endpoint ---
-const char server[] = "silly-mammals-ask.loca.lt";
-const int port = 80;
-const char resource[] = "/api/sensors/ingest";
+const char server[] = "16.176.145.91";
+const int port = 5000;
+const char resource[] = "/api/telemetry/spot-check";
 const char apn[] = "jionet";
 
 TinyGsm modem(modemSerial);
@@ -140,40 +140,15 @@ void loraListenerTask(void *pvParameters)
             collarReady = true;
             printCollar = true;
           }
-          else if (type == "DigiCup")
+          else if (type == "cup")
           {
-            currentCowId = doc["id"].as<String>();
+            String quarter = doc["quarter"].as<String>();
+            currentCowId = doc["rfid"].as<String>();
 
-            qLF.ec = doc["LF"]["ec"];
-            qLF.ph = doc["LF"]["ph"];
-            qLF.v = doc["LF"]["v"];
-            qLF.r = doc["LF"]["rgb"][0];
-            qLF.g = doc["LF"]["rgb"][1];
-            qLF.b = doc["LF"]["rgb"][2];
-
-            qRF.ec = doc["RF"]["ec"];
-            qRF.ph = doc["RF"]["ph"];
-            qRF.v = doc["RF"]["v"];
-            qRF.r = doc["RF"]["rgb"][0];
-            qRF.g = doc["RF"]["rgb"][1];
-            qRF.b = doc["RF"]["rgb"][2];
-
-            qLR.ec = doc["LR"]["ec"];
-            qLR.ph = doc["LR"]["ph"];
-            qLR.v = doc["LR"]["v"];
-            qLR.r = doc["LR"]["rgb"][0];
-            qLR.g = doc["LR"]["rgb"][1];
-            qLR.b = doc["LR"]["rgb"][2];
-
-            qRR.ec = doc["RR"]["ec"];
-            qRR.ph = doc["RR"]["ph"];
-            qRR.v = doc["RR"]["v"];
-            qRR.r = doc["RR"]["rgb"][0];
-            qRR.g = doc["RR"]["rgb"][1];
-            qRR.b = doc["RR"]["rgb"][2];
-
-            cupReady = true;
-            printCup = true;
+            if (quarter == "LF") { qLF.ec = doc["ec"]; qLF.ph = doc["ph"]; qLF.v = doc["viscosity"]; qLF.r = doc["r"]; qLF.g = doc["g"]; qLF.b = doc["b"]; cupReady = false; }
+            if (quarter == "RF") { qRF.ec = doc["ec"]; qRF.ph = doc["ph"]; qRF.v = doc["viscosity"]; qRF.r = doc["r"]; qRF.g = doc["g"]; qRF.b = doc["b"]; }
+            if (quarter == "LR") { qLR.ec = doc["ec"]; qLR.ph = doc["ph"]; qLR.v = doc["viscosity"]; qLR.r = doc["r"]; qLR.g = doc["g"]; qLR.b = doc["b"]; }
+            if (quarter == "RR") { qRR.ec = doc["ec"]; qRR.ph = doc["ph"]; qRR.v = doc["viscosity"]; qRR.r = doc["r"]; qRR.g = doc["g"]; qRR.b = doc["b"]; cupReady = true; printCup = true; }
           }
 
           portEXIT_CRITICAL(&telemetryMutex);
@@ -362,15 +337,16 @@ void loop()
     {
       return "{\"ec\":" + String(q.ec, 2) +
              ",\"ph\":" + String(q.ph, 2) +
-             ",\"color\":\"" + classifyMilkColor(q.r, q.g, q.b) +
-             "\",\"viscosity\":" + String(q.v, 1) + "}";
+             ",\"skin_temp\":38.5" +
+             ",\"viscosity_torque\":" + String(q.v, 1) + "}";
     };
 
     String postData = "{";
-    postData += "\"cow_id\":\"" + localCowId + "\",";
-    postData += "\"collar_metrics\":{\"cow_body_temp\":" + String(localCollarTemp, 1) + ",\"rumination_delta\":" + String(localCollarRum, 1) + "},";
-    postData += "\"hub_metrics\":{\"shed_thi\":" + String(thi, 1) + "},";
-    postData += "\"quarter_readings\":{";
+    postData += "\"device_id\":\"HUB-001\",";
+    postData += "\"rfid_tag\":\"900000000000118\",";
+    postData += "\"farm_id\":\"FARM0001\",";
+    postData += "\"rumination\":" + String(localCollarRum, 1) + ",";
+    postData += "\"quarters\":{";
     postData += "\"LF\":" + buildQ(localLF) + ",";
     postData += "\"RF\":" + buildQ(localRF) + ",";
     postData += "\"LR\":" + buildQ(localLR) + ",";
