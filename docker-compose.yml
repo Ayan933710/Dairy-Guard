@@ -39,6 +39,8 @@ services:
       - DEVICE_INGEST_KEY=esp32_hardware_key_1234
       - AI_SERVICE_URL=http://ai_service:8000
       - AI_SERVICE_ENABLED=true
+      - ADMIN_PASSWORD=Admin123!
+      - BCRYPT_SALT_ROUNDS=10
       - DEMO_VIDEO_URL=${DEMO_VIDEO_URL}
     # Add other necessary backend env vars here or load from an .env file
 
