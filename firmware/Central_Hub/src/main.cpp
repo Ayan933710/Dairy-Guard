@@ -41,7 +41,7 @@ Adafruit_BME280 bme;
 
 // --- Cloud Endpoint ---
 const char server[] = "16.176.145.91";
-const int port = 5000;
+const int port = 80;
 const char resource[] = "/api/telemetry/spot-check";
 const char apn[] = "jionet";
 
@@ -338,11 +338,13 @@ void loop()
       return "{\"ec\":" + String(q.ec, 2) +
              ",\"ph\":" + String(q.ph, 2) +
              ",\"skin_temp\":38.5" +
+             ",\"yield\":0.0" +
              ",\"viscosity_torque\":" + String(q.v, 1) + "}";
     };
 
     String postData = "{";
     postData += "\"device_id\":\"HUB-001\",";
+    postData += "\"device_key\":\"hackcypher_nandi_2026\",";
     postData += "\"rfid_tag\":\"900000000000118\",";
     postData += "\"farm_id\":\"FARM0001\",";
     postData += "\"rumination\":" + String(localCollarRum, 1) + ",";
@@ -361,7 +363,7 @@ void loop()
     if (err == 0)
     {
       http.sendHeader("Content-Type", "application/json");
-      http.sendHeader("x-device-key", "esp32_hardware_key_1234");
+      http.sendHeader("x-device-key", "hackcypher_nandi_2026");
       http.sendHeader("Bypass-Tunnel-Reminder", "true"); // Instantly bypasses the loca.lt warning page
       http.sendHeader("Content-Length", postData.length());
       http.sendHeader("Connection", "close");
