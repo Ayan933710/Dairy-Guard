@@ -25,7 +25,14 @@ router.get('/health', (req, res) => res.json({ status: 'ok', service: 'nandi-bac
 // Proxy to FastAPI AI microservice for on-demand predictions
 router.post('/cow/:cowId/predict', async (req, res) => {
   const { cowId } = req.params;
-  const baseUrl = env.AI_SERVICE_URL || 'http://localhost:8000';
+  const baseUrls = Array.from(
+    new Set([
+      env.AI_SERVICE_URL,
+      'http://ai_service:8000',
+      'http://127.0.0.1:8000',
+      'http://localhost:8000',
+    ].filter(Boolean))
+  );
 
   // Determine candidate IDs to try in FastAPI (e.g., C-118, UUID, display_tag)
   const candidateIds = [cowId];
@@ -49,23 +56,21 @@ router.post('/cow/:cowId/predict', async (req, res) => {
 
   let lastError = null;
 
-  for (const id of candidateIds) {
-    try {
-      const response = await axios.post(
-        `${baseUrl}/api/cow/${encodeURIComponent(id)}/predict`,
-        req.body || {},
-        {
-          headers: { 'Content-Type': 'application/json' },
-          timeout: env.AI_SERVICE_TIMEOUT_MS || 5000,
-        }
-      );
-      return res.json(response.data);
-    } catch (err) {
-      lastError = err;
-      if (err.response?.status === 404) {
-        continue;
+  for (const baseUrl of baseUrls) {
+    for (const id of candidateIds) {
+      try {
+        const response = await axios.post(
+          `${baseUrl}/api/cow/${encodeURIComponent(id)}/predict`,
+          req.body || {},
+          {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: env.AI_SERVICE_TIMEOUT_MS || 5000,
+          }
+        );
+        return res.json(response.data);
+      } catch (err) {
+        lastError = err;
       }
-      break;
     }
   }
 
