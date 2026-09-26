@@ -140,15 +140,36 @@ void loraListenerTask(void *pvParameters)
             collarReady = true;
             printCollar = true;
           }
-          else if (type == "cup")
+          else if (type == "DigiCup" || type == "cup" || type == "SmartCup")
           {
-            String quarter = doc["quarter"].as<String>();
-            currentCowId = doc["rfid"].as<String>();
+            if (doc.containsKey("id")) currentCowId = doc["id"].as<String>();
+            if (doc.containsKey("rfid")) currentCowId = doc["rfid"].as<String>();
 
-            if (quarter == "LF") { qLF.ec = doc["ec"]; qLF.ph = doc["ph"]; qLF.v = doc["viscosity"]; qLF.r = doc["r"]; qLF.g = doc["g"]; qLF.b = doc["b"]; cupReady = false; }
-            if (quarter == "RF") { qRF.ec = doc["ec"]; qRF.ph = doc["ph"]; qRF.v = doc["viscosity"]; qRF.r = doc["r"]; qRF.g = doc["g"]; qRF.b = doc["b"]; }
-            if (quarter == "LR") { qLR.ec = doc["ec"]; qLR.ph = doc["ph"]; qLR.v = doc["viscosity"]; qLR.r = doc["r"]; qLR.g = doc["g"]; qLR.b = doc["b"]; }
-            if (quarter == "RR") { qRR.ec = doc["ec"]; qRR.ph = doc["ph"]; qRR.v = doc["viscosity"]; qRR.r = doc["r"]; qRR.g = doc["g"]; qRR.b = doc["b"]; cupReady = true; printCup = true; }
+            if (doc.containsKey("LF") && doc.containsKey("RF") && doc.containsKey("LR") && doc.containsKey("RR"))
+            {
+              qLF.ec = doc["LF"]["ec"]; qLF.ph = doc["LF"]["ph"]; qLF.v = doc["LF"]["v"] | doc["LF"]["viscosity"];
+              if (doc["LF"].containsKey("rgb")) { qLF.r = doc["LF"]["rgb"][0]; qLF.g = doc["LF"]["rgb"][1]; qLF.b = doc["LF"]["rgb"][2]; }
+
+              qRF.ec = doc["RF"]["ec"]; qRF.ph = doc["RF"]["ph"]; qRF.v = doc["RF"]["v"] | doc["RF"]["viscosity"];
+              if (doc["RF"].containsKey("rgb")) { qRF.r = doc["RF"]["rgb"][0]; qRF.g = doc["RF"]["rgb"][1]; qRF.b = doc["RF"]["rgb"][2]; }
+
+              qLR.ec = doc["LR"]["ec"]; qLR.ph = doc["LR"]["ph"]; qLR.v = doc["LR"]["v"] | doc["LR"]["viscosity"];
+              if (doc["LR"].containsKey("rgb")) { qLR.r = doc["LR"]["rgb"][0]; qLR.g = doc["LR"]["rgb"][1]; qLR.b = doc["LR"]["rgb"][2]; }
+
+              qRR.ec = doc["RR"]["ec"]; qRR.ph = doc["RR"]["ph"]; qRR.v = doc["RR"]["v"] | doc["RR"]["viscosity"];
+              if (doc["RR"].containsKey("rgb")) { qRR.r = doc["RR"]["rgb"][0]; qRR.g = doc["RR"]["rgb"][1]; qRR.b = doc["RR"]["rgb"][2]; }
+
+              cupReady = true;
+              printCup = true;
+            }
+            else if (doc.containsKey("quarter"))
+            {
+              String quarter = doc["quarter"].as<String>();
+              if (quarter == "LF") { qLF.ec = doc["ec"]; qLF.ph = doc["ph"]; qLF.v = doc["v"] | doc["viscosity"]; }
+              if (quarter == "RF") { qRF.ec = doc["ec"]; qRF.ph = doc["ph"]; qRF.v = doc["v"] | doc["viscosity"]; }
+              if (quarter == "LR") { qLR.ec = doc["ec"]; qLR.ph = doc["ph"]; qLR.v = doc["v"] | doc["viscosity"]; }
+              if (quarter == "RR") { qRR.ec = doc["ec"]; qRR.ph = doc["ph"]; qRR.v = doc["v"] | doc["viscosity"]; cupReady = true; printCup = true; }
+            }
           }
 
           portEXIT_CRITICAL(&telemetryMutex);
