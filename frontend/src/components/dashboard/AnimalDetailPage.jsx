@@ -83,14 +83,16 @@ export default function AnimalDetailPage() {
     ? Object.entries(livePrediction.quarter_results || livePrediction.quarters).map(([qKey, qData]) => {
         // Handle both flat structures and nested 'metrics' structure
         const source = qData.metrics || qData;
+        // Find matching quarter from detail.quarters in case prediction lacks raw metrics
+        const fallbackQ = detail?.quarters?.find((q) => q.quarter === qKey) || {};
         return {
           quarter: qKey,
-          ec: source.ec ?? source.ec_value ?? source.ecValue ?? null,
-          ph: source.ph ?? source.ph_value ?? source.phValue ?? null,
-          color: source.color ?? source.colour ?? source.color_code ?? '—',
-          viscosity: source.viscosity ?? source.viscosity_value ?? source.viscosityValue ?? null,
+          ec: source.ec ?? source.ec_value ?? source.ecValue ?? fallbackQ.ec ?? fallbackQ.ecValue ?? null,
+          ph: source.ph ?? source.ph_value ?? source.phValue ?? fallbackQ.ph ?? fallbackQ.phValue ?? null,
+          color: source.color ?? source.colour ?? source.color_code ?? fallbackQ.color ?? fallbackQ.colour ?? fallbackQ.colorCode ?? '—',
+          viscosity: source.viscosity ?? source.viscosity_value ?? source.viscosityValue ?? fallbackQ.viscosity ?? fallbackQ.viscosityValue ?? null,
           is_infected: qData.ai_prediction === 'subclinical' || qData.risk_pct >= 50,
-        }
+        };
       })
     : detail.quarters.map((q) => ({
         ...q,
