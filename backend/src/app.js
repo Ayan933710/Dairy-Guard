@@ -56,7 +56,7 @@ app.get('/api/config', (req, res) => {
 app.get('/', (req, res) => {
   res.json({
     message: 'NANDI backend is running. See /api/health for status.',
-    apkDownload: 'http:
+    apkDownload: '/nandi.apk'
   });
 });
 

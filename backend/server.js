@@ -23,9 +23,9 @@ function startServer(port) {
     initSocket(server);
     startMqttBridge();
 
-    logger.info(`NANDI backend listening on http:
+    logger.info(`NANDI backend listening on http://localhost:${port}`);
     logger.info(`Local URL: http://localhost:${port}`);
-    logger.info(`Wi-Fi / Phone APK URL: http:
+    logger.info(`Wi-Fi / Phone APK URL: http://<YOUR_IP>:${port}/nandi.apk`);
     logger.info(`Environment: ${env.NODE_ENV}`);
     logger.info(`Allowed CORS origins: ${env.CLIENT_ORIGIN.join(', ')}`);
   });

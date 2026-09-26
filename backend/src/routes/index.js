@@ -27,7 +27,6 @@ router.post('/cow/:cowId/predict', async (req, res) => {
     new Set([
       env.AI_SERVICE_URL,
       'http://ai_service:8000',
-      'http:
       'http://localhost:8000',
     ].filter(Boolean))
   );
