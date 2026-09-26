@@ -204,18 +204,19 @@ Create a `.env` file in the `backend/` directory:
 PORT=5000
 DATABASE_URL=postgres://nandi_user:your_secure_password@localhost:5432/nandi_db
 JWT_SECRET=your_super_secret_key
+DEVICE_INGEST_KEY=hackcypher_nandi_2026
 FRONTEND_URL=http://localhost:5173
 ```
 
 ## 31. Firmware Installation / Flashing
 1. Install the Arduino IDE or PlatformIO.
 2. Add ESP32 board support.
-3. Open the firmware `.ino` or `main.cpp` files.
+3. Open the firmware `main.cpp` files in VS Code / PlatformIO.
 4. Select the correct COM port and flash the ESP32.
 
 ## 32. Device Configuration
-- Each Collar and Cup must be hardcoded or provisioned with a unique Device ID.
-- The Central Hub must be configured with the local Wi-Fi credentials and the API endpoint URL.
+- Each Collar and Cup must be provisioned with a unique Device ID or RFID ear tag mapping (e.g. `900000000000118`).
+- The Central Hub must be configured with cellular APN credentials (`jionet`), target server IP, target port (`80` for EC2 Nginx proxy), and the `x-device-key` header (`hackcypher_nandi_2026`).
 
 ## 33. Running the Complete System
 1. **Start the database:** Ensure PostgreSQL is running.

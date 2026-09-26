@@ -1,4 +1,4 @@
 bblanchon/ArduinoJson @ ^6.21.5
 milesburton/DallasTemperature @ ^3.11.0
-sandeepmistry/LoRa @ ^0.8.0
 paulstoffregen/OneWire @ ^2.3.8
+sandeepmistry/LoRa @ ^0.8.0

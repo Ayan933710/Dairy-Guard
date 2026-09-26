@@ -31,7 +31,11 @@ Copy `.env.example` to `.env` and fill in your secure credentials:
 ```bash
 cp .env.example .env
 ```
-Ensure `DATABASE_URL`, `JWT_SECRET`, and `DEVICE_INGEST_KEY` are properly configured.
+Ensure `DATABASE_URL`, `JWT_SECRET`, and `DEVICE_INGEST_KEY` are properly configured:
+```env
+DEVICE_INGEST_KEY=hackcypher_nandi_2026
+```
+The `verifyDeviceKey` middleware validates incoming `x-device-key` headers on `/api/telemetry/ingest` and `/api/telemetry/spot-check` endpoints against this variable.
 
 ### 3. Node.js Setup
 ```bash

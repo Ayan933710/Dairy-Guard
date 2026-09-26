@@ -130,12 +130,8 @@ export default function AnimalDetailPage() {
 
       let data = null;
 
-      try {
-        const res = await api.post(`/predictions/run/${animal.id}`, {});
-        data = res?.risk?.details || res;
-      } catch (_) {
-        data = await api.post(`/cow/${encodeURIComponent(targetCowId)}/predict`, {});
-      }
+      const res = await api.post(`/predictions/run/${animal.id}`, {});
+      data = res?.risk?.details || res;
 
       if (data) {
         setLivePrediction(data);

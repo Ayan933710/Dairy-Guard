@@ -47,7 +47,7 @@ export function getApiUrls() {
 const DEFAULT_API_URLS = getApiUrls();
 const API_URL = DEFAULT_API_URLS[0] || 'http://172.16.60.135:5000/api';
 const TOKEN_STORAGE_KEY = 'nandi_token';
-const REQUEST_TIMEOUT_MS = 3500;
+const REQUEST_TIMEOUT_MS = 8000;
 
 export function getToken() {
   try {

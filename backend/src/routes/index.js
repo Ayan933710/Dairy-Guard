@@ -75,11 +75,16 @@ router.post('/cow/:cowId/predict', async (req, res) => {
   }
 
   const status = lastError?.response?.status || 502;
-  const message =
+  let message =
     lastError?.response?.data?.detail ||
     lastError?.response?.data?.error ||
     lastError?.message ||
     'AI service unavailable';
+    
+  if (message.includes('Failed to fetch') || message.includes('fetch failed')) {
+    message = 'AI service unreachable or down.';
+  }
+
   return res.status(status).json({ error: message });
 });
 

@@ -14,8 +14,10 @@ from mastitis import predict_on_spot
 
 load_dotenv()
 
-# Safely encoded database password
-SQLALCHEMY_DATABASE_URL = "postgresql://nandi_user:nandi%5Fhackcypher@localhost:5432/nandi_db"
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "SQLALCHEMY_DATABASE_URL",
+    "postgresql://nandi_user:nandi_secure_password@db:5432/nandi_db"
+)
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

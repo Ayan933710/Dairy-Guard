@@ -31,6 +31,11 @@ The frontend interface for the NANDI platform, built to be accessible, responsiv
    VITE_API_URL=http://localhost:5000/api
    VITE_SOCKET_URL=http://localhost:5000
    ```
+   For production deployments (EC2 / Docker Compose), set the environment variables to target your server's IP address or domain on port `80` (where Nginx proxies `/api` and `/socket.io`):
+   ```env
+   VITE_API_URL=http://<YOUR_EC2_PUBLIC_IP>:5000/api
+   VITE_SOCKET_URL=http://<YOUR_EC2_PUBLIC_IP>:5000
+   ```
 
 3. **Run Development Server:**
    ```bash

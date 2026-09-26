@@ -36,7 +36,7 @@ services:
       - DATABASE_URL=postgresql://nandi_user:nandi_secure_password@db:5432/nandi_db # Connects to the db container
       - CLIENT_ORIGIN=http://${EC2_PUBLIC_IP} # Loaded from .env in production
       - JWT_SECRET=nandi_prod_jwt_s3cr3t_k3y_2026_xK9mP2vL
-      - DEVICE_INGEST_KEY=esp32_hardware_key_1234
+      - DEVICE_INGEST_KEY=hackcypher_nandi_2026
       - AI_SERVICE_URL=http://ai_service:8000
       - AI_SERVICE_ENABLED=true
       - ADMIN_PASSWORD=Admin123!
