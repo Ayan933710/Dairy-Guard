@@ -1,11 +1,10 @@
 <div align="center">
-  <!-- <img src="[LINK_TO_YOUR_LOGO]" width="200" alt="NANDI Logo"> -->
+  <img src="https://drive.google.com/file/d/1X95pUv1csY6Vw8VdxsekcQAsq3zCP0LB/view?usp=drivesdk" width="200" alt="NANDI Logo">
   <h1>NANDI</h1>
   <p><b>An AI-powered IoT ecosystem for proactive dairy herd health monitoring, Subclinical Mastitis detection, and yield optimization.</b></p>
   <p>
-    <a href="[YOUR_WEBSITE_LINK_HERE]"><strong>🌐 Live Website</strong></a> · 
-    <a href="[YOUR_DEMO_VIDEO_LINK_HERE]"><strong>🎥 Demo Video</strong></a> · 
-    <a href="[YOUR_RESEARCH_PAPER_LINK_HERE]"><strong>📄 Research Papers</strong></a>
+    <a href="http://16.176.145.91/"><strong>🌐 Live Website</strong></a> · 
+    <a href="[YOUR_DEMO_VIDEO_LINK_HERE]"><strong>🎥 Demo Video</strong></a>
   </p>
 </div>
 
@@ -46,19 +45,6 @@ NANDI operates on a robust, four-tier architecture designed for low latency (< 2
 * **Sensors:** MPU6050 (IMU), DS18B20 (Waterproof Temp), MLX90614 (IR Temp), EC & pH Probes, INA219 (Current/Viscosity)
 * **Power:** 3.7V 18650 Li-ion cells trickle-charged by 1W (Collar) and 5W (Hub) solar panels. Collar achieves ~195 days of dark reserve.
 * **Enclosures:** IP67 UV-resistant ABS plastic (Collar) and food-grade sanitizable housing (Cup).
-
-### Core Wiring Reference
-| Component | ESP32 Pin | Function |
-| :--- | :--- | :--- |
-| MPU6050 SDA | GPIO 21 | I2C Data |
-| MPU6050 SCL | GPIO 22 | I2C Clock |
-| LoRa NSS | GPIO 5 | SPI Chip Select |
-| LoRa MOSI | GPIO 23 | SPI MOSI |
-| LoRa MISO | GPIO 19 | SPI MISO |
-| LoRa SCK | GPIO 18 | SPI Clock |
-| DS18B20 | GPIO 4 | One-Wire Temp |
-
-*(Note: Unit cost is estimated at $15-$20 for Collars, $30-$40 for Cups, and $50 for the Hub).*
 
 ---
 
@@ -128,21 +114,20 @@ FRONTEND_URL=http://localhost:5173
 ## 🔮 Future Roadmap
 * Integration with automatic drafting gates for automated herd management.
 * Expansion of the AI engine to detect estrus (heat) cycles.
-* Development of a React Native mobile application for direct push notifications, reducing reliance on SMS gateways.
+* Creating the rugged model of device and deploying it in the market for testing.
 
 ---
 
 ## 👥 Team HackCypher
-* **Ayan (Narayan Shaw)** - Hardware Architecture & Full-Stack Development
-* **Saloni Gupta** - [Role / Contribution]
-* **Faizan Alkama** - [Role / Contribution]
-* **Saurav Choubey** - [Role / Contribution]
+* **Narayan Shaw** - Hardware Architecture & Full-Stack Development
+* **Saloni Gupta** - Hardware Architecture & Presentation
+* **Harsh Kumar** - AI/ML Model
+* **Ayush Raj** - PPT & Research
+* **Faizan Alkama** - Frontend Development
+* **Saurav Choubey** - Backend Development
 
 ---
 
 ## 🏆 Acknowledgements
 Engineered for the Smart India Hackathon 2026 (Problem Statement 26109).
-Special thanks to our local dairy cooperatives for their invaluable domain insights and field testing support.
-
-## 📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+Special thanks to our local dairy cooperatives and small scale dairy farmers for their invaluable domain insights and field testing support.

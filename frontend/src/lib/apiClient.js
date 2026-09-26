@@ -55,12 +55,12 @@ export function setToken(token) {
 }
 
 async function request(path, { method = 'GET', body, headers = {}, auth = true } = {}) {
-  const finalHeaders = { 
+  const finalHeaders = {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
     'Expires': '0',
-    ...headers 
+    ...headers
   };
   const token = auth ? getToken() : null;
   if (token) finalHeaders.Authorization = `Bearer ${token}`;
