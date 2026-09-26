@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://drive.google.com/file/d/1X95pUv1csY6Vw8VdxsekcQAsq3zCP0LB/view?usp=drivesdk" width="200" alt="NANDI Logo">
+  <img src="https://drive.google.com/uc?export=view&id=1X95pUv1csY6Vw8VdxsekcQAsq3zCP0LB" width="200" alt="NANDI Logo">
   <h1>NANDI</h1>
   <p><b>An AI-powered IoT ecosystem for proactive dairy herd health monitoring, Subclinical Mastitis detection, and yield optimization.</b></p>
   <p>
