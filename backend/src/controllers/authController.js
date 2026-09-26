@@ -1,4 +1,3 @@
-/** Registration, login, and "who am I" for the AuthPage.jsx frontend flow. */
 const bcrypt = require('bcryptjs');
 const userModel = require('../models/userModel');
 const { signToken } = require('../utils/jwt');
@@ -68,7 +67,6 @@ const register = asyncHandler(async (req, res) => {
 });
 
 const login = asyncHandler(async (req, res) => {
-  // Vets use registration_number; the same lookup also preserves existing farmer logins.
   const { identifier, email, password } = req.body;
   const lookupValue = identifier || email; // `email` kept for backward compatibility
 
@@ -93,7 +91,6 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const me = asyncHandler(async (req, res) => {
-  // req.user is populated by the `protect` middleware
   res.json({ user: req.user });
 });
 

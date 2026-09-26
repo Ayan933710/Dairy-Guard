@@ -1,11 +1,3 @@
-/**
- * Minimal migration runner - no framework needed.
- * Reads every .sql file in src/db/migrations, in filename order, and
- * runs it inside its own statement. Tracks completed files in a
- * `schema_migrations` table so `npm run migrate` is safe to re-run.
- *
- * Usage: npm run migrate
- */
 const fs = require('fs');
 const path = require('path');
 const { pool } = require('../config/db');

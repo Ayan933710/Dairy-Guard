@@ -1,11 +1,3 @@
-/**
- * Seeds the database with demo users and a demo herd that mirrors the
- * shape of the frontend's mock data (src/data/herd.js) so the UI looks
- * populated immediately after `npm run seed`, before any real ESP32
- * hardware or the Python AI service are connected.
- *
- * Usage: npm run seed
- */
 const bcrypt = require('bcryptjs');
 const { pool } = require('../config/db');
 const { generateFarmId } = require('../models/userModel');
@@ -19,7 +11,6 @@ const USERS = [
   { full_name: 'Kolkata Milk Cooperative', email: 'coop@nandi.test', phone: '+919800000003', role: 'cooperative_admin', farm_name: null },
 ];
 
-// Animal identity only — NO fake sensor data. Real values come from hardware.
 const HERD = [
   { display_tag: 'C-104', rfid: '900000000000104', name: 'Gauri', species: 'cow', breed: 'Sahiwal Cross', age: 5, lactation: 3 },
   { display_tag: 'C-118', rfid: '900000000000118', name: 'Radha', species: 'cow', breed: 'Gir', age: 4, lactation: 2 },
@@ -82,7 +73,6 @@ async function seed() {
       );
       const animalId = rows[0].id;
 
-      // Register the two field devices for this animal
       await client.query(
         `INSERT INTO devices (id, device_type, animal_id, owner_id, label, last_seen_at)
          VALUES ($1,'collar',$2,$3,$4, now())`,
@@ -94,9 +84,6 @@ async function seed() {
         [`CUP-${a.display_tag}`, animalId, farmerId, `${a.name}'s Smart Cup`]
       );
     }
-
-    // No fake recommendations or history events — these will be generated
-    // automatically by the backend when real hardware data arrives.
 
     await client.query('COMMIT');
     console.log('\n[seed] Done! Demo accounts (all use password: %s):', DEMO_PASSWORD);

@@ -1,8 +1,6 @@
-/** Powers HerdOverviewPage.jsx and SpeciesListPage.jsx. */
 const animalModel = require('../models/animalModel');
 const asyncHandler = require('../utils/asyncHandler');
 
-/** Farmers only ever see their own herd; vets & coop admins see the full herd. */
 function ownerScopeFor(user) {
   return user.role === 'farmer' ? user.id : null;
 }

@@ -1,4 +1,3 @@
-/** Redirects to /login when there is no authenticated user; shows nothing while the initial /auth/me check is in flight. */
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext.jsx';
 import { useLanguage } from '../../hooks/useLanguage.jsx';

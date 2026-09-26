@@ -74,11 +74,11 @@ void setup()
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
   if (!LoRa.begin(433E6))
   {
-    Serial.println(F("❌ LoRa failed!"));
+    Serial.println(F("LoRa failed!"));
   }
   else
   {
-    Serial.println(F("✅ LoRa Ready."));
+    Serial.println(F("LoRa Ready."));
     LoRa.setSyncWord(0xF3);
   }
 }

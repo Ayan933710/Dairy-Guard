@@ -52,7 +52,6 @@ export default function AnimalDetailPage() {
   const { animal, trend } = detail;
   const recommendation = recommendations?.find((r) => r.animalId === animal.id);
 
-  // Helper to map category strings to herd.js badge styles
   const getRiskKey = (cat) => {
     if (!cat) return 'none';
     const lower = cat.toLowerCase();
@@ -62,7 +61,6 @@ export default function AnimalDetailPage() {
     return 'none';
   };
 
-  // Derive display values from live FastAPI prediction when available
   const activeAnimal = livePrediction
     ? {
         ...animal,
@@ -81,9 +79,7 @@ export default function AnimalDetailPage() {
 
   const activeQuarters = livePrediction?.quarter_results || livePrediction?.quarters
     ? Object.entries(livePrediction.quarter_results || livePrediction.quarters).map(([qKey, qData]) => {
-        // Handle both flat structures and nested 'metrics' structure
         const source = qData.metrics || qData;
-        // Find matching quarter from detail.quarters in case prediction lacks raw metrics
         const fallbackQ = detail?.quarters?.find((q) => q.quarter === qKey) || {};
         return {
           quarter: qKey,
@@ -182,7 +178,7 @@ export default function AnimalDetailPage() {
             <RiskBadge risk={activeAnimal.risk} size="lg" />
           </div>
 
-          {/* TOP SECTION: Overall Cow Health Metrics */}
+          {}
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-lg border border-milk/10 bg-night-card/60 p-3 text-center flex flex-col justify-center">
               <p className="text-xs uppercase tracking-wide text-milk-dim">{t('riskScore')}</p>
@@ -230,7 +226,7 @@ export default function AnimalDetailPage() {
           </div>
           {removeError && <p className="mt-2 text-xs text-red-600">{removeError}</p>}
 
-          {/* BOTTOM SECTION: Quarter-Level Raw Telemetry */}
+          {}
           <div className="mt-6">
             <p className="mb-3 text-xs uppercase tracking-wide text-milk-dim">
               {t('quarterLevelReadings')}

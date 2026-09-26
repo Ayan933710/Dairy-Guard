@@ -2,13 +2,13 @@
 
 The backend ecosystem for NANDI consists of two core components working in tandem: a robust **Node.js / Express** API server for orchestration, and a **Python FastAPI** AI microservice for predictive analytics.
 
-## 🚀 Tech Stack
+## Tech Stack
 
 - **Primary Server:** Node.js, Express, PostgreSQL, Sequelize ORM
 - **AI Microservice:** Python 3, FastAPI, Scikit-Learn, XGBoost, Pandas
 - **Authentication:** JWT (JSON Web Tokens) with secure bcrypt password hashing.
 
-## 🌟 Architecture Overview
+## Architecture Overview
 
 1. **Node.js (Main API)**
    - Listens on `port 5000`.
@@ -21,7 +21,7 @@ The backend ecosystem for NANDI consists of two core components working in tande
    - Runs inference using the `predict_on_spot` pipeline to return confidence intervals for Subclinical Mastitis on a per-teat basis.
    - Orchestrated internally; requested directly by the Node server.
 
-## 🛠️ Setup Instructions
+## Setup Instructions
 
 ### 1. Database Setup
 Ensure PostgreSQL is running and you have created a database (e.g., `nandi_db`).

@@ -1,4 +1,3 @@
-/** Consistent loading / error placeholders for pages that fetch from the backend. */
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '../../hooks/useLanguage.jsx';
 

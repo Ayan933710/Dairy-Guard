@@ -157,7 +157,7 @@ export default function FeaturesSection() {
         />
       </div>
 
-      {/* Workflow timeline */}
+      {}
       <motion.div
         initial="hidden"
         whileInView="show"

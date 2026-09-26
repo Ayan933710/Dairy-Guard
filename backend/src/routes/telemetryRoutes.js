@@ -4,12 +4,9 @@ const { protect, requireApprovedVet, verifyDeviceKey } = require('../middleware/
 
 const router = express.Router();
 
-// ESP32-S3 devices call this directly over HTTP with the shared device key
-// (no user login). Body shape documented in services/telemetryIngestService.js
 router.post('/ingest', verifyDeviceKey, ingest);
 router.post('/spot-check', verifyDeviceKey, spotCheck);
 
-// Dashboard clients (JWT-authenticated) browsing recent raw readings
 router.get('/recent', protect, requireApprovedVet, recent);
 
 module.exports = router;

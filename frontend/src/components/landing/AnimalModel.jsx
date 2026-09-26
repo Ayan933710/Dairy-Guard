@@ -4,13 +4,6 @@ import { Html, useAnimations, useGLTF } from '@react-three/drei';
 import { AnimatePresence, motion } from 'framer-motion';
 import * as THREE from 'three';
 
-/**
- * A stylised, low-poly animal built entirely from primitive geometry.
- * No external GLTF assets required — every species (cow / buffalo)
- * reuses the same rig with different proportions, colours and horn shapes,
- * which mirrors the PRD's point that "the hardware remains exactly the
- * same" across species and only the AI baseline changes.
- */
 const SPECIES_CONFIG = {
   cow: {
     body: '#E8DFC8',
@@ -59,7 +52,6 @@ function PrimitiveAnimal({
   useFrame((state) => {
     const t = state.clock.getElapsedTime() + t0;
     if (headRef.current) {
-      // Gentle idle head sway, a little more curious when focused (hero cow).
       headRef.current.rotation.y = Math.sin(t * 0.6) * (focused ? 0.12 : 0.06);
       headRef.current.rotation.x = Math.sin(t * 0.9) * 0.03;
     }
@@ -82,7 +74,7 @@ function PrimitiveAnimal({
       }}
       onPointerOut={() => setHovered(false)}
     >
-      {/* Body */}
+      {}
       <group ref={breatheRef}>
         <mesh position={[0, 0.62, 0]} castShadow receiveShadow>
           <capsuleGeometry args={[0.34, 0.75, 6, 12]} rotation={[0, 0, Math.PI / 2]} />
@@ -96,13 +88,13 @@ function PrimitiveAnimal({
         )}
       </group>
 
-      {/* Legs */}
+      {}
       <Leg x={0.32} z={0.22} />
       <Leg x={0.32} z={-0.22} />
       <Leg x={-0.32} z={0.22} />
       <Leg x={-0.32} z={-0.22} />
 
-      {/* Neck + Head group (this is what we animate + attach the collar to) */}
+      {}
       <group ref={headRef} position={[0.52, 0.98, 0]} name="head-anchor">
         <mesh position={[0.12, 0, 0]} rotation={[0, 0, 0.3]} castShadow>
           <cylinderGeometry args={[0.16, 0.2, 0.32, 10]} />
@@ -112,7 +104,7 @@ function PrimitiveAnimal({
           <boxGeometry args={[0.34, 0.26, 0.24]} />
           <meshStandardMaterial color={cfg.body} roughness={0.6} />
         </mesh>
-        {/* Horns */}
+        {}
         <mesh position={[0.28, 0.24, 0.12]} rotation={[0, 0, -0.5]}>
           <coneGeometry args={[0.03, cfg.hornLength, 6]} />
           <meshStandardMaterial color={cfg.hornColor} roughness={0.4} />
@@ -121,7 +113,7 @@ function PrimitiveAnimal({
           <coneGeometry args={[0.03, cfg.hornLength, 6]} />
           <meshStandardMaterial color={cfg.hornColor} roughness={0.4} />
         </mesh>
-        {/* Ears */}
+        {}
         <mesh position={[0.22, 0.1, 0.16]} rotation={[0.2, 0, 0.6]}>
           <coneGeometry args={[0.05, cfg.earLength, 6]} />
           <meshStandardMaterial color={cfg.body} roughness={0.7} />
@@ -130,14 +122,14 @@ function PrimitiveAnimal({
           <coneGeometry args={[0.05, cfg.earLength, 6]} />
           <meshStandardMaterial color={cfg.body} roughness={0.7} />
         </mesh>
-        {/* Muzzle marker so the anchor point for the collar is legible */}
+        {}
         <mesh position={[0.46, -0.02, 0]}>
           <sphereGeometry args={[0.08, 8, 8]} />
           <meshStandardMaterial color="#4a4038" roughness={0.9} />
         </mesh>
       </group>
 
-      {/* Tail */}
+      {}
       <mesh ref={tailRef} position={[-0.62, 0.75, 0]} rotation={[0, 0, -0.3]}>
         <cylinderGeometry args={[0.02, 0.03, 0.42, 6]} />
         <meshStandardMaterial color={cfg.body} roughness={0.7} />

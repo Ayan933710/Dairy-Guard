@@ -2,7 +2,7 @@
 
 The firmware directory contains the C++ code for the custom ESP32-based hardware modules used in the NANDI ecosystem. The hardware is responsible for capturing real-time biometric and chemical telemetry from the dairy cattle and transmitting it securely to the cloud.
 
-## 📡 Hardware Nodes
+## Hardware Nodes
 
 ### 1. Smart Collar (`/Smart_Collar`)
 Worn by the cattle to track physiological signs.
@@ -22,7 +22,7 @@ A smart milking cup add-on that analyzes milk chemistry in real-time on a quarte
 The barn aggregator node.
 - **Function:** Collects localized environmental data (Temperature and Humidity Index - THI) to adjust the AI's stress thresholds. Acts as a LoRa-to-WiFi/GSM gateway if cattle are outside Wi-Fi range.
 
-## 🛠️ Build & Flash Instructions
+## Build & Flash Instructions
 
 This project uses **PlatformIO**. It is highly recommended to use VS Code with the PlatformIO extension.
 
@@ -37,5 +37,5 @@ This project uses **PlatformIO**. It is highly recommended to use VS Code with t
 4. Connect the ESP32 via USB.
 5. Click **Build** (`✓`) and then **Upload** (`→`) in the PlatformIO toolbar.
 
-## 🔒 Security & Authentication
+## Security & Authentication
 All telemetry POST requests sent by the Central Hub (over SIM7600 cellular or Wi-Fi) must include the `x-device-key` header with value `hackcypher_nandi_2026` to authenticate against the backend ingestion endpoint (`verifyDeviceKey` middleware).

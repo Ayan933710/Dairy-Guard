@@ -29,8 +29,6 @@ export default function AnalyticsPage() {
   if (loading) return <LoadingState label={t('loadingAnalytics')} />;
   if (error) return <ErrorState message={error} onRetry={refetch} />;
 
-  // riskBreakdown from the backend only includes levels that actually occur -
-  // fill in the rest at 0 so the pie chart always shows all four segments.
   const countByLevel = Object.fromEntries(summary.riskBreakdown.map((r) => [r.risk_level, r.count]));
   const dist = RISK_LEVELS.map((level) => ({ level, count: countByLevel[level] || 0 }));
 

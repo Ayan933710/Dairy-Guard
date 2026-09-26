@@ -36,8 +36,6 @@ export default function InteractiveCard({
     return () => window.clearTimeout(shimmerTimer);
   }, [shimmer]);
 
-  // After first animation completes, mark as animated so subsequent
-  // scroll-in/out cycles don't replay the hidden→visible transition.
   function handleAnimationComplete() {
     hasAnimated.current = true;
   }
@@ -56,8 +54,6 @@ export default function InteractiveCard({
   return (
     <motion.div
       variants={variants}
-      // After the first entrance animation, skip future "hidden" resets
-      // so cards stay visible when scrolled out of and back into view.
       initial={hasAnimated.current ? 'visible' : undefined}
       style={{ rotateX, rotateY, transformPerspective: 900 }}
       onMouseMove={handlePointerMove}

@@ -1,12 +1,3 @@
-/**
- * JWT authentication + RBAC authorization middleware.
- *
- *   protect            - requires a valid "Authorization: Bearer <token>" header
- *   requireRole(...roles) - after protect, restricts to specific user roles
- *   verifyDeviceKey     - separate, lightweight auth for ESP32 IoT devices
- *                         posting telemetry directly over HTTP (not JWT-based,
- *                         since firmware can't easily do interactive login).
- */
 const { verifyToken } = require('../utils/jwt');
 const userModel = require('../models/userModel');
 const env = require('../config/env');

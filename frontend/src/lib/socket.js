@@ -1,9 +1,3 @@
-/**
- * Singleton Socket.io client connecting to the NANDI backend for
- * real-time dashboard updates ('telemetry:new', 'animal:updated',
- * 'alert:new'). Connects lazily and re-authenticates whenever the
- * stored JWT changes (e.g. after login/logout).
- */
 import { io } from 'socket.io-client';
 import { getToken, getApiUrls } from './apiClient.js';
 
@@ -14,7 +8,7 @@ export function getSocketUrl() {
   if (urls.length > 0) {
     return urls[0].replace(/\/api\/?$/, '');
   }
-  return 'http://172.16.60.135:5000';
+  return 'http:
 }
 
 let socket = null;

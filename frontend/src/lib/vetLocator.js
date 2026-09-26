@@ -1,12 +1,3 @@
-/**
- * Opens Google Maps in a new tab, centered on the user's current location
- * (via the browser Geolocation API) with a "veterinarian" search — so a
- * recommendation card can send the farmer straight to nearby vets without
- * NANDI needing to maintain its own directory of clinics.
- *
- * Falls back to a location-less Maps search if geolocation is denied,
- * unavailable, or times out.
- */
 const FALLBACK_URL = 'https://www.google.com/maps/search/veterinarian+near+me';
 
 export function openNearbyVetSearch() {

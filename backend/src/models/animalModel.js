@@ -1,4 +1,3 @@
-/** Data-access layer for `bovine_registry` and its related sub-resources. */
 const { query } = require('../config/db');
 
 async function create(data) {
@@ -12,7 +11,6 @@ async function create(data) {
   return rows[0];
 }
 
-/** List animals, optionally scoped to an owner (farmers only see their own herd) and/or species. */
 async function list({ ownerId = null, species = null } = {}) {
   const clauses = ['is_active = TRUE'];
   const params = [];

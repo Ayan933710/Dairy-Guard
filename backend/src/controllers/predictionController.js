@@ -1,4 +1,3 @@
-/** Powers PredictionsPage.jsx - AI/vet recommendations per animal. */
 const riskModel = require('../models/riskModel');
 const animalModel = require('../models/animalModel');
 const userModel = require('../models/userModel');
@@ -30,11 +29,6 @@ const createRecommendation = asyncHandler(async (req, res) => {
   res.status(201).json({ recommendation });
 });
 
-/**
- * On-demand re-scoring for a single animal - lets the dashboard show a
- * "Run prediction now" button rather than waiting for the next telemetry
- * push. Uses the animal's most recent cached metadata as feature input.
- */
 const runPrediction = asyncHandler(async (req, res) => {
   const animal = await animalModel.findById(req.params.animalId);
   if (!animal) return res.status(404).json({ error: 'Animal not found.' });

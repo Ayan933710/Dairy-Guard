@@ -1,10 +1,3 @@
-/**
- * Adapters that convert backend row shapes (snake_case, Postgres column
- * names) into the camelCase shape the existing dashboard components were
- * originally built against (see the old src/data/herd.js mock module).
- * Keeping this mapping in one place means every page shares one contract.
- */
-
 export function normalizeAnimal(row) {
   if (!row) return null;
   return {

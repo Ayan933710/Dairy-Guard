@@ -1,13 +1,3 @@
-/**
- * Thin fetch() wrapper around the NANDI AI backend.
- *
- * - Reads the API base URL from VITE_API_URL (see .env.example).
- * - Automatically attaches the stored JWT as a Bearer token.
- * - Falls back across common local backend ports when the server auto-retries
- *   from 5000 to the next free port after a port conflict.
- * - Throws an Error with a readable message on non-2xx responses so
- *   callers can just `.catch(err => setError(err.message))`.
- */
 export function getCustomApiUrl() {
   try {
     return localStorage.getItem('nandi_custom_api_url') || '';
@@ -21,7 +11,6 @@ export function setCustomApiUrl(url) {
     if (url) localStorage.setItem('nandi_custom_api_url', url.trim());
     else localStorage.removeItem('nandi_custom_api_url');
   } catch {
-    // ignore
   }
 }
 
@@ -38,14 +27,14 @@ export function getApiUrls() {
     ...(custom ? [custom.replace(/\/+$/, '') + (custom.endsWith('/api') ? '' : '/api')] : []),
     ...(configured ? [configured] : []),
     'http://localhost:5000/api',
-    'http://172.16.60.135:5000/api',
-    'http://10.0.2.2:5000/api',
+    'http:
+    'http:
   ];
   return Array.from(new Set(rawList.filter(Boolean))).map((value) => value.replace(/\/+$/, ''));
 }
 
 const DEFAULT_API_URLS = getApiUrls();
-const API_URL = DEFAULT_API_URLS[0] || 'http://172.16.60.135:5000/api';
+const API_URL = DEFAULT_API_URLS[0] || 'http:
 const TOKEN_STORAGE_KEY = 'nandi_token';
 const REQUEST_TIMEOUT_MS = 8000;
 
@@ -62,7 +51,6 @@ export function setToken(token) {
     if (token) localStorage.setItem(TOKEN_STORAGE_KEY, token);
     else localStorage.removeItem(TOKEN_STORAGE_KEY);
   } catch {
-    // localStorage unavailable (private browsing, etc.) - token just won't persist across reloads
   }
 }
 

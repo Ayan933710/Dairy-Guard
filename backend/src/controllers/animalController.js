@@ -1,4 +1,3 @@
-/** Powers AnimalDetailPage.jsx - full profile for a single animal: quarters, trend, telemetry. */
 const animalModel = require('../models/animalModel');
 const telemetryModel = require('../models/telemetryModel');
 const predictionModel = require('../models/predictionModel');

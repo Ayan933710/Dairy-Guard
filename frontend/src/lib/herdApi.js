@@ -1,4 +1,3 @@
-/** Resource-specific calls for herd/animal/prediction/history/analytics endpoints. */
 import { api } from './apiClient.js';
 import {
   normalizeAnimal,

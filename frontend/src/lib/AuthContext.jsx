@@ -19,7 +19,6 @@ export function AuthProvider({ children }) {
       setUser(me);
       setStatus('authenticated');
     } catch {
-      // token expired/invalid
       setToken(null);
       setUser(null);
       setStatus('guest');
@@ -65,7 +64,6 @@ export function AuthProvider({ children }) {
     try {
       await api.post('/auth/logout');
     } catch {
-      // Backend unreachable — still proceed with local logout
     }
     setToken(null);
     setUser(null);

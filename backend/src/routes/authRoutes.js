@@ -6,7 +6,6 @@ const auditModel = require('../models/auditModel');
 
 const router = express.Router();
 
-// Stricter rate limiter for auth routes to prevent brute-force attacks
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 20, // max 20 attempts per 15 minutes

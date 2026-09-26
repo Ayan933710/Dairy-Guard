@@ -53,9 +53,7 @@ HttpClient http(client, server, port);
 unsigned long previousBmeMillis = 0;
 const long bmeInterval = 5000;
 
-// ==========================================
-// 1. DATA STORAGE & EVENT FLAGS
-// ==========================================
+
 portMUX_TYPE telemetryMutex = portMUX_INITIALIZER_UNLOCKED;
 
 String currentCowId = "";
@@ -94,12 +92,10 @@ String classifyMilkColor(int r, int g, int b)
     return "Normal";
 }
 
-// ==========================================
-// 2. BACKGROUND LORA TASK (RUNS ON CORE 0)
-// ==========================================
+
 void loraListenerTask(void *pvParameters)
 {
-  Serial.println("✅ [Core 0] Background LoRa task successfully booted and listening!");
+  Serial.println("[Core 0] Background LoRa task successfully booted and listening!");
 
   for (;;)
   {
@@ -110,9 +106,9 @@ void loraListenerTask(void *pvParameters)
       while (LoRa.available())
         incoming += (char)LoRa.read();
 
-      Serial.println("\n🚨 [RAW LORA] -> " + incoming);
+      Serial.println("\n[RAW LORA] -> " + incoming);
 
-      // BULLETPROOF SHIELD: Ignore radio noise, find only the JSON
+      
       int firstBrace = incoming.indexOf('{');
       int lastBrace = incoming.lastIndexOf('}');
 
@@ -120,7 +116,7 @@ void loraListenerTask(void *pvParameters)
       {
         String cleanJson = incoming.substring(firstBrace, lastBrace + 1);
 
-        // Massive 1024-byte dynamic heap memory to prevent array overflow crashes
+        
         DynamicJsonDocument doc(1024);
         DeserializationError error = deserializeJson(doc, cleanJson);
 
@@ -226,18 +222,18 @@ void loraListenerTask(void *pvParameters)
 
           portEXIT_CRITICAL(&telemetryMutex);
 
-          // Safe Serial Printing OUTSIDE the Mutex lock
+          
           if (printCollar)
           {
             Serial.println("-----------------------------------------");
-            Serial.println("🛸 [LoRa Core 0] SmartCollar Data Parsed:");
+            Serial.println("[LoRa Core 0] SmartCollar Data Parsed:");
             Serial.printf("   -> ID: %s | Temp: %.1f °C | Rumination: %.1f\n", currentCowId.c_str(), collarTemp, collarRum);
             Serial.println("-----------------------------------------");
           }
           if (printCup)
           {
             Serial.println("-----------------------------------------");
-            Serial.println("🛸 [LoRa Core 0] DigiCup Data Parsed:");
+            Serial.println("[LoRa Core 0] DigiCup Data Parsed:");
             Serial.printf("   -> LF: EC=%.1f | pH=%.1f | Color=%s\n", qLF.ec, qLF.ph, classifyMilkColor(qLF.r, qLF.g, qLF.b).c_str());
             Serial.printf("   -> RF: EC=%.1f | pH=%.1f | Color=%s\n", qRF.ec, qRF.ph, classifyMilkColor(qRF.r, qRF.g, qRF.b).c_str());
             Serial.printf("   -> LR: EC=%.1f | pH=%.1f | Color=%s\n", qLR.ec, qLR.ph, classifyMilkColor(qLR.r, qLR.g, qLR.b).c_str());
@@ -247,11 +243,11 @@ void loraListenerTask(void *pvParameters)
         }
         else
         {
-          Serial.println("⚠️ JSON Parse Error: " + String(error.c_str()));
+          Serial.println("JSON Parse Error: " + String(error.c_str()));
         }
       }
     }
-    // Absolutely critical delay to prevent Core 0 watchdog crash
+    
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -276,11 +272,11 @@ void setup()
 
   if (!LoRa.begin(433E6))
   {
-    Serial.println("❌ LoRa init failed.");
+    Serial.println("LoRa init failed.");
   }
   else
   {
-    Serial.println("✅ LoRa Initialized on SPI Bus 1.");
+    Serial.println("LoRa Initialized on SPI Bus 1.");
     LoRa.setSyncWord(0xF3);
   }
 
@@ -289,11 +285,11 @@ void setup()
   sdSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
   if (!SD.begin(SD_CS, sdSPI))
   {
-    Serial.println("❌ SD Card init failed. Check wiring/format.");
+    Serial.println("SD Card init failed. Check wiring/format.");
   }
   else
   {
-    Serial.println("✅ SD Card Initialized on SPI Bus 2.");
+    Serial.println("SD Card Initialized on SPI Bus 2.");
     File logFile = SD.open("/bme_log.csv", FILE_APPEND);
     if (logFile)
     {
@@ -308,35 +304,35 @@ void setup()
   Wire.begin(I2C_SDA, I2C_SCL);
   if (!bme.begin(0x76, &Wire))
   {
-    Serial.println("❌ BME280 not found.");
+    Serial.println("BME280 not found.");
   }
   else
   {
-    Serial.println("✅ BME280 Initialized.");
+    Serial.println("BME280 Initialized.");
   }
 
-  // 🛑 Wait 1 second before cellular modem boot
+  // Wait 1 second before cellular modem boot
   delay(1000);
 
-  // 👉 5. INITIALIZE MODEM (UART)
+  // 5. INITIALIZE MODEM (UART)
   Serial.print("⏳ Booting Cellular Modem & searching for tower (this takes up to 60s)... ");
   modemSerial.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
   modem.restart();
 
   if (!modem.waitForNetwork(60000L))
   {
-    Serial.println("❌ Network failed to connect! (Check antenna/SIM)");
+    Serial.println("Network failed to connect! (Check antenna/SIM)");
   }
   else if (!modem.gprsConnect(apn, "", ""))
   {
-    Serial.println("❌ GPRS/Data connection failed! (Check APN: " + String(apn) + ")");
+    Serial.println("GPRS/Data connection failed! (Check APN: " + String(apn) + ")");
   }
   else
   {
-    Serial.println("✅ Cellular Connected!");
+    Serial.println("Cellular Connected!");
   }
 
-  // 👉 6. ALWAYS LAUNCH LORA LISTENER (Even if 4G is down, we still want to read sensors/SD!)
+  // 6. ALWAYS LAUNCH LORA LISTENER (Even if 4G is down, we still want to read sensors/SD!)
   xTaskCreatePinnedToCore(loraListenerTask, "LoRaTask", 4096, NULL, 1, NULL, 0);
 }
 
@@ -384,7 +380,7 @@ void loop()
   if (readyToSend && modem.isGprsConnected())
   {
 
-    // Copy data safely and immediately reset flags for the next round
+    
     portENTER_CRITICAL(&telemetryMutex);
     String localCowId = currentCowId;
     float localCollarTemp = collarTemp;
@@ -395,7 +391,7 @@ void loop()
     cupReady = false;
     portEXIT_CRITICAL(&telemetryMutex);
 
-    Serial.println("\n[☁️ SYNC] Both Collar and Cup received! Constructing payload...");
+    Serial.println("\n[SYNC] Both Collar and Cup received! Constructing payload...");
 
     float tempC = bme.readTemperature();
     float humidity = bme.readHumidity();
@@ -430,7 +426,7 @@ void loop()
     postData += "\"RR\":" + buildQ(localRR);
     postData += "}}";
 
-    Serial.println("📤 Transmitting to AI Server:");
+    Serial.println("Transmitting to AI Server:");
     Serial.println(postData);
 
     http.beginRequest();
@@ -447,12 +443,12 @@ void loop()
       http.endRequest();
 
       int statusCode = http.responseStatusCode();
-      Serial.printf("📡 HTTP Response Code: %d\n", statusCode);
+      Serial.printf("HTTP Response Code: %d\n", statusCode);
 
       if (statusCode > 0)
       {
         String response = http.responseBody();
-        Serial.println("📩 Server Reply: " + response);
+        Serial.println("Server Reply: " + response);
       }
     }
     http.stop();

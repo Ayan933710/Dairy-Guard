@@ -1,4 +1,3 @@
-// Condensed from PRD Section 3 (Hardware Subsystems & BOM).
 export const COLLAR_PARTS = [
   {
     id: 'mcu',

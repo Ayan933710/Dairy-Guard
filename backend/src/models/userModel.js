@@ -1,10 +1,8 @@
-/** Data-access layer for the `users` table. Plain SQL via the shared pool - no ORM. */
 const crypto = require('crypto');
 const { query } = require('../config/db');
 
 const PUBLIC_COLUMNS = 'id, full_name, email, role, phone, farm_name, farm_id, cooperative_id, vet_state, vet_district, vet_designation, registration_number, farm_state, farm_district, hub_latitude, hub_longitude, preferred_language, vet_approval_status, is_active, created_at';
 
-/** Short, human-typeable ID (e.g. "K7QX9F2A") shown in the top panel and used by hardware. */
 function generateFarmId() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I - avoids mis-typing on hardware
   let id = '';
@@ -15,8 +13,6 @@ function generateFarmId() {
 }
 
 async function create({ full_name, email, password_hash, role, phone, farm_name, vet_state, vet_district, vet_designation, registration_number, farm_state, farm_district, hub_latitude, hub_longitude, preferred_language = 'en', vet_approval_status = 'approved' }) {
-  // Generate IDs for both farm owners and cooperative accounts so hardware and
-  // the dashboard can identify either account consistently.
   for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
       const { rows } = await query(
@@ -45,7 +41,6 @@ async function findByEmail(email) {
   return rows[0] || null;
 }
 
-/** Login can use email, phone, farm ID, or a Vet registration number. */
 async function findByIdentifier(identifier) {
   const { rows } = await query(
     'SELECT * FROM users WHERE email = $1 OR phone = $1 OR farm_id = $1 OR registration_number = $1',

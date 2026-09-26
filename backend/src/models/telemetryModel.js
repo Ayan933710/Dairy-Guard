@@ -1,4 +1,3 @@
-/** Data-access layer for `sensor_telemetry` (the IoT time-series table). */
 const { query } = require('../config/db');
 
 async function insert(reading) {

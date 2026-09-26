@@ -1,4 +1,3 @@
-/** Data-access layer for the `devices` registry table. */
 const { query } = require('../config/db');
 
 async function findById(deviceId) {

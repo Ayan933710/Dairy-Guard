@@ -1,4 +1,3 @@
-/** Powers AnalyticsPage.jsx - herd-wide aggregate stats. */
 const { query } = require('../config/db');
 const asyncHandler = require('../utils/asyncHandler');
 

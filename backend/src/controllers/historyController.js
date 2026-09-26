@@ -1,4 +1,3 @@
-/** Powers HistoryPage.jsx - herd-wide event/audit timeline. */
 const riskModel = require('../models/riskModel');
 const asyncHandler = require('../utils/asyncHandler');
 

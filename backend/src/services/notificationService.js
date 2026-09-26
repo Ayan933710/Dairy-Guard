@@ -1,20 +1,3 @@
-/**
- * notificationService.js
- * ------------------------------------------------------------------
- * Sends mastitis/high-risk alerts to a farmer over WhatsApp, SMS, and
- * email whenever an animal's risk score crosses ALERT_RISK_THRESHOLD
- * (default 75, i.e. "High Risk"). Each message includes the animal's
- * key readings, the current recommendation (if any), and a direct
- * link into the dashboard for that animal.
- *
- * This uses Twilio for WhatsApp/SMS and SMTP (via nodemailer) for
- * email - both are optional and OFF by default. Set the relevant
- * *_ENABLED flag and credentials in .env to turn each channel on;
- * any channel left disabled or misconfigured is skipped with a
- * warning rather than crashing the ingestion pipeline, so telemetry
- * processing is never blocked by a notification failure.
- * ------------------------------------------------------------------
- */
 const env = require('../config/env');
 const logger = require('../utils/logger');
 const userModel = require('../models/userModel');

@@ -1,14 +1,3 @@
-/**
- * Shared ingestion pipeline used by BOTH the HTTP ingestion route
- * (routes/telemetryRoutes.js, for devices that can reach the internet
- * directly / for testing with curl or Postman) AND the MQTT bridge
- * (services/mqttBridge.js, for ESP32-S3 devices that publish over
- * LoRa -> NANDI Hub -> MQTT).
- *
- * Keeping this logic in one place guarantees identical behaviour
- * (validation, DB writes, risk scoring, socket broadcast) no matter
- * which transport the telemetry arrived over.
- */
 const animalModel = require('../models/animalModel');
 const telemetryModel = require('../models/telemetryModel');
 const riskModel = require('../models/riskModel');
@@ -21,25 +10,6 @@ const { sendMastitisAlert } = require('./notificationService');
 const logger = require('./../utils/logger');
 const { randomUUID } = require('crypto');
 
-/**
- * @param {object} payload - raw JSON telemetry from an ESP32-S3 device
- * @param {string} payload.device_id
- * @param {string} [payload.device_type] - 'collar' | 'cup' | 'hub'
- * @param {string} payload.rfid_tag - 15-digit AIN read off the animal's ear tag
- * @param {string} payload.farm_id - the 8-character Farm ID punched into the hub/collar/cup at
- *   setup time. Every reading must carry it, and it must match the ID of the farmer who owns
- *   the animal being reported on - this is what keeps one farm's hardware from ever being able
- *   to write into another farm's herd data, even if it (accidentally or otherwise) reports an
- *   RFID tag that belongs to someone else.
- * @param {string} [payload.quarter] - 'LF' | 'RF' | 'LR' | 'RR' (four mammary quarters)
- * @param {number} [payload.ec]
- * @param {number} [payload.ph]
- * @param {number} [payload.viscosity_torque]
- * @param {number} [payload.yield]
- * @param {number} [payload.rumination]
- * @param {number} [payload.skin_temp]
- * @param {string} [payload.recorded_at] - ISO timestamp captured on-device
- */
 async function ingestTelemetry(payload) {
   const animal = await animalModel.findByRfid(payload.rfid_tag);
   if (!animal) {
@@ -58,7 +28,6 @@ async function ingestTelemetry(payload) {
     await userModel.updateHubLocation(owner.id, Number(payload.latitude), Number(payload.longitude));
   }
 
-  // 1. Persist the raw reading (time-series table)
   const reading = await telemetryModel.insert({
     animal_id: animal.id,
     device_id: payload.device_id,
@@ -74,13 +43,10 @@ async function ingestTelemetry(payload) {
     raw_payload: payload,
   });
 
-  // 2. Track device "last seen" for the hardware health view
   await deviceModel.upsertLastSeen(payload.device_id, { batteryPct: payload.battery_pct }).catch(() => {
-    // Device may not be pre-registered yet (e.g. first boot) - not fatal for ingestion.
     logger.warn(`[ingest] device ${payload.device_id} not found in registry; reading still stored.`);
   });
 
-  // 3. Score risk (rule engine today, XGBoost microservice once live)
   const features = {
     ec: payload.ec,
     ph: payload.ph,
@@ -126,7 +92,6 @@ async function ingestTelemetry(payload) {
     });
   }
 
-  // 4. Push real-time updates to the owning farmer's dashboard
   emitToOwner(updatedAnimal.owner_id, 'telemetry:new', reading);
   emitToOwner(updatedAnimal.owner_id, 'animal:updated', updatedAnimal);
 
@@ -140,7 +105,6 @@ async function ingestTelemetry(payload) {
       message: `${updatedAnimal.name} (${updatedAnimal.display_tag}) just crossed into High Risk (${score}%).`,
     });
 
-    // 5. WhatsApp/SMS/email alert to the farmer - never blocks the response if it fails.
     const recommendation = await riskModel.listRecommendations({ animalId: updatedAnimal.id }).then((r) => r[0]);
     sendMastitisAlert({ animal: updatedAnimal, owner, riskScore: score, riskLevel: level, reading, recommendation }).catch(
       (err) => logger.warn('[ingest] notification dispatch failed:', err.message)
@@ -150,10 +114,6 @@ async function ingestTelemetry(payload) {
   return { reading, animal: updatedAnimal, risk: { score, level, source, details } };
 }
 
-/**
- * Ingest one complete, instantaneous milk test. All four quarter readings
- * share one spot_check_id and are sent to the model as one snapshot.
- */
 async function ingestSpotCheck(payload) {
   const animal = await animalModel.findByRfid(payload.rfid_tag);
   if (!animal) throw Object.assign(new Error(`No animal registered with RFID tag ${payload.rfid_tag}`), { statusCode: 404 });

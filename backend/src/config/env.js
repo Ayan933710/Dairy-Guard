@@ -1,9 +1,3 @@
-/**
- * Centralized environment configuration.
- * Loads and validates process.env once, so the rest of the app can
- * `require('../config/env')` and get a typed, defaulted config object
- * instead of scattering `process.env.X` calls everywhere.
- */
 require('dotenv').config();
 
 function bool(value, fallback = false) {
@@ -41,9 +35,7 @@ const env = {
   AI_SERVICE_ENABLED: bool(process.env.AI_SERVICE_ENABLED, false),
   AI_MODEL_VERSION: process.env.AI_MODEL_VERSION || 'nandi_ai_v2.2_calibrated',
 
-  // Deep-link base used in alert messages (WhatsApp/SMS/email) to jump straight to an animal's page.
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
-  // Risk score (0-100) at or above which a mastitis/high-risk alert is sent.
   ALERT_RISK_THRESHOLD: parseInt(process.env.ALERT_RISK_THRESHOLD, 10) || 75,
 
   NOTIFY_WHATSAPP_ENABLED: bool(process.env.NOTIFY_WHATSAPP_ENABLED, false),
@@ -66,7 +58,6 @@ const env = {
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '',
 };
 
-
 if (!env.DATABASE_URL) {
   // eslint-disable-next-line no-console
   console.warn(
@@ -74,7 +65,6 @@ if (!env.DATABASE_URL) {
   );
 }
 
-// CRITICAL: Never run production with known insecure fallback secrets
 if (env.NODE_ENV === 'production') {
   if (env.JWT_SECRET === INSECURE_JWT_FALLBACK) {
     throw new Error('FATAL: JWT_SECRET must be set to a strong random value in production. Server refusing to start.');

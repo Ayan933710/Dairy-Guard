@@ -1,4 +1,3 @@
-/** Thin wrapper around jsonwebtoken so token shape stays consistent app-wide. */
 const jwt = require('jsonwebtoken');
 const env = require('../config/env');
 

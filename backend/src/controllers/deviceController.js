@@ -1,4 +1,3 @@
-/** Device registry endpoints - list/register the ESP32-S3 hardware fleet. */
 const deviceModel = require('../models/deviceModel');
 const asyncHandler = require('../utils/asyncHandler');
 

@@ -1,9 +1,3 @@
-/**
- * Small data-fetching hook shared by every dashboard page: calls
- * `fetchFn()` whenever `deps` changes, and exposes { data, loading,
- * error, refetch } so components can render loading/error states
- * consistently instead of each page reinventing this.
- */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useFetch(fetchFn, deps = []) {

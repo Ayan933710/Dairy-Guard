@@ -1,4 +1,3 @@
-/** Mounts every feature router under /api/* in one place. */
 const express = require('express');
 
 const router = express.Router();
@@ -22,22 +21,19 @@ const animalModel = require('../models/animalModel');
 
 router.get('/health', (req, res) => res.json({ status: 'ok', service: 'nandi-backend' }));
 
-// Proxy to FastAPI AI microservice for on-demand predictions
 router.post('/cow/:cowId/predict', async (req, res) => {
   const { cowId } = req.params;
   const baseUrls = Array.from(
     new Set([
       env.AI_SERVICE_URL,
       'http://ai_service:8000',
-      'http://127.0.0.1:8000',
+      'http:
       'http://localhost:8000',
     ].filter(Boolean))
   );
 
-  // Determine candidate IDs to try in FastAPI (e.g., C-118, UUID, display_tag)
   const candidateIds = [cowId];
 
-  // If it's a UUID, check if there's a corresponding display_tag like C-118
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cowId)) {
     try {
       const animal = await animalModel.findById(cowId);
@@ -45,11 +41,9 @@ router.post('/cow/:cowId/predict', async (req, res) => {
         candidateIds.push(animal.display_tag);
       }
     } catch {
-      // ignore lookup error
     }
   }
 
-  // Always append C-118 as final fallback if not already present
   if (!candidateIds.includes('C-118')) {
     candidateIds.push('C-118');
   }

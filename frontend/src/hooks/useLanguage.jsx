@@ -210,7 +210,6 @@ const TRANSLATIONS = {
     stateLabel: 'State',
     noStatesAvailable: 'No states available',
 
-
     mpu6050: 'MPU6050',
     motility: 'Motility',
     loraRadio: 'LoRa radio',

@@ -1,10 +1,3 @@
-/**
- * Server entry point.
- * Boots the HTTP server, attaches Socket.io for real-time dashboard
- * updates, and starts the optional MQTT bridge for ESP32-S3 devices
- * that publish telemetry via a LoRa gateway / MQTT broker instead of
- * calling the HTTP ingestion route directly.
- */
 const http = require('http');
 const app = require('./src/app');
 const env = require('./src/config/env');
@@ -27,14 +20,12 @@ function startServer(port) {
   });
 
   server.listen(port, '0.0.0.0', () => {
-    // Only initialize Socket.io and MQTT after successful port binding
-    // to avoid creating duplicate listeners on port retries
     initSocket(server);
     startMqttBridge();
 
-    logger.info(`NANDI backend listening on http://0.0.0.0:${port}`);
+    logger.info(`NANDI backend listening on http:
     logger.info(`Local URL: http://localhost:${port}`);
-    logger.info(`Wi-Fi / Phone APK URL: http://172.16.60.135:${port}`);
+    logger.info(`Wi-Fi / Phone APK URL: http:
     logger.info(`Environment: ${env.NODE_ENV}`);
     logger.info(`Allowed CORS origins: ${env.CLIENT_ORIGIN.join(', ')}`);
   });

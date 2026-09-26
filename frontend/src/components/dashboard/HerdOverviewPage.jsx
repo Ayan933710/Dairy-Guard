@@ -219,15 +219,12 @@ export default function HerdOverviewPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: animals, loading, error, refetch } = useFetch(fetchHerd, []);
   const safeAnimals = Array.isArray(animals) ? animals : [];
-  // Track whether the entrance animations have already played.
-  // After first mount, set initial to false so scroll doesn't replay them.
   const hasMounted = useRef(false);
   useEffect(() => { hasMounted.current = true; }, []);
 
   const [liveData, setLiveData] = useState({});
 
   useEffect(() => {
-    // Import socket dynamically if not at top, but let's just use connectSocket which we will import
     import('../../lib/socket.js').then(({ connectSocket }) => {
       const socket = connectSocket();
       
@@ -246,7 +243,6 @@ export default function HerdOverviewPage() {
             }
           }));
         } else if (payload.animal_id) {
-          // single reading
           setLiveData(prev => ({
             ...prev,
             [payload.animal_id]: {
@@ -326,7 +322,7 @@ export default function HerdOverviewPage() {
         <StatCard label={t('gatewayUptime')} value="99.4%" sub={t('last30Days')} to="/dashboard/analytics" />
       </motion.div>
 
-      {/* Live herd review strip */}
+      {}
       <section className="dashboard-review-section rounded-2xl p-4 sm:p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-xl text-milk">{t('liveHerdReview')}</h2>
@@ -344,7 +340,7 @@ export default function HerdOverviewPage() {
         </motion.div>
       </section>
 
-      {/* High risk board */}
+      {}
       <section className="dashboard-risk-section rounded-2xl p-4 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-xl text-milk">{t('highRiskBoard')}</h2>

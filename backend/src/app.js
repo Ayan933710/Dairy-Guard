@@ -1,8 +1,3 @@
-/**
- * Express application setup - middleware stack + route mounting.
- * Kept separate from server.js so it can be imported directly in
- * tests (supertest) without binding a real port / socket.io server.
- */
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -19,7 +14,6 @@ app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      // In dev or from mobile webviews / tools without origin, allow request
       if (!origin || env.NODE_ENV !== 'production' || env.CLIENT_ORIGIN.includes(origin)) {
         return callback(null, true);
       }
@@ -31,7 +25,6 @@ app.use(
 app.use(express.json({ limit: '2mb' })); // generous limit for batched telemetry payloads
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-// Basic protection against brute-force login attempts / device flooding
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 300, // generous for a dashboard + multiple IoT devices polling
@@ -63,7 +56,7 @@ app.get('/api/config', (req, res) => {
 app.get('/', (req, res) => {
   res.json({
     message: 'NANDI backend is running. See /api/health for status.',
-    apkDownload: 'http://172.16.60.135:5000/nandi.apk',
+    apkDownload: 'http:
   });
 });
 

@@ -1,4 +1,3 @@
-/** Data-access layer for risk_history, quarter_readings, recommendations, herd_events. */
 const { query } = require('../config/db');
 
 async function insertRiskHistory(animalId, { riskScore, riskLevel, source = 'rule_engine' }) {
