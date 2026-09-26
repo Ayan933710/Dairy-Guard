@@ -21,13 +21,15 @@ const getAnimalDetail = asyncHandler(async (req, res) => {
   const animal = await loadAndAuthorize(req, res);
   if (!animal) return;
 
-  const [quarters, trend, latestPrediction] = await Promise.all([
+  const [quarters, trend, latestPrediction, recentTelemetry] = await Promise.all([
     animalModel.getQuarters(animal.id),
     animalModel.getTrend(animal.id, 30),
     predictionModel.latestForAnimal(animal.id),
+    telemetryModel.latestForAnimal(animal.id, 1),
   ]);
 
-  res.json({ animal, quarters, trend, latestPrediction });
+  const latestTelemetry = recentTelemetry[0] || null;
+  res.json({ animal, quarters, trend, latestPrediction, latestTelemetry });
 });
 
 const getAnimalTelemetry = asyncHandler(async (req, res) => {

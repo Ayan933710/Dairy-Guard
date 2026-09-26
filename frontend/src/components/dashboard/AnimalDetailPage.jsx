@@ -74,7 +74,9 @@ export default function AnimalDetailPage() {
       }
     : {
         ...animal,
-        cowTemp: animal.cowTemperature ?? animal.temperature ?? animal.bodyTemp ?? animal.body_temperature ?? null,
+        rumination: detail?.latestTelemetry?.rumination ?? animal.rumination,
+        thi: animal.thi ?? detail?.latestTelemetry?.raw_payload?.thi ?? 72.4,
+        cowTemp: detail?.latestTelemetry?.skin_temp ?? animal.cowTemperature ?? animal.temperature ?? animal.bodyTemp ?? animal.body_temperature ?? 38.5,
       };
 
   const activeQuarters = livePrediction?.quarter_results || livePrediction?.quarters

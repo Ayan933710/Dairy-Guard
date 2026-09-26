@@ -28,22 +28,20 @@ export function setCustomApiUrl(url) {
 export function getApiUrls() {
   const custom = getCustomApiUrl();
   const configured = import.meta.env.VITE_API_URL?.trim();
-  const fallbackUrls = [
-    'http://172.16.60.135:5000/api',
+  const originApi =
+    typeof window !== 'undefined' && window.location?.origin && window.location.origin !== 'null'
+      ? `${window.location.origin.replace(/\/+$/, '')}/api`
+      : null;
+
+  const rawList = [
+    ...(originApi ? [originApi] : []),
+    ...(custom ? [custom.replace(/\/+$/, '') + (custom.endsWith('/api') ? '' : '/api')] : []),
+    ...(configured ? [configured] : []),
     'http://localhost:5000/api',
+    'http://172.16.60.135:5000/api',
     'http://10.0.2.2:5000/api',
-    'http://localhost:5001/api',
-    'http://localhost:5002/api',
-    'http://localhost:5003/api',
-    'http://localhost:3000/api',
   ];
-  return Array.from(
-    new Set([
-      ...(custom ? [custom.replace(/\/+$/, '') + (custom.endsWith('/api') ? '' : '/api')] : []),
-      ...(configured ? [configured] : []),
-      ...fallbackUrls,
-    ])
-  ).map((value) => value.replace(/\/+$/, ''));
+  return Array.from(new Set(rawList.filter(Boolean))).map((value) => value.replace(/\/+$/, ''));
 }
 
 const DEFAULT_API_URLS = getApiUrls();

@@ -83,13 +83,22 @@ async function updateRiskSnapshot(animalId, { riskLevel, riskScore, ruminationDe
 
 async function getQuarters(animalId) {
   const { rows } = await query(
+    `SELECT DISTINCT ON (quarter) quarter, ec, ph, viscosity_torque AS viscosity, skin_temp, recorded_at
+       FROM sensor_telemetry
+      WHERE animal_id = $1 AND quarter IS NOT NULL
+      ORDER BY quarter, recorded_at DESC`,
+    [animalId]
+  );
+  if (rows.length > 0) return rows;
+
+  const fallback = await query(
     `SELECT DISTINCT ON (quarter) quarter, ec_delta_pct, temp_delta_c, yield_drop_pct, recorded_at
        FROM quarter_readings
       WHERE animal_id = $1
       ORDER BY quarter, recorded_at DESC`,
     [animalId]
   );
-  return rows;
+  return fallback.rows;
 }
 
 async function getTrend(animalId, days = 30) {
