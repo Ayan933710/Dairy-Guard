@@ -1,41 +1,36 @@
 # NANDI Hardware Integration Plan
 
-This document outlines the required configuration steps to connect the NANDI hardware devices (Smart Collar, Digi-Cup, Central Hub) to the backend system, enable the AI engine, and stream data to the website and APK.
+This document outlines the required configuration steps to connect the NANDI hardware devices (Smart Collar, Digi-Cup, Central Hub) to the backend system and stream data to the live AWS web application.
 
-The core infrastructure and logic are already implemented in the system (e.g., `telemetryIngestService.js` and `ai_inference_service.js`). The integration process primarily involves configuring connections, environment variables, and starting the required services.
+## 1. Firmware Configuration (Edge Devices)
 
----
-
-## 1. Firmware Configuration (Hardware Side)
 For the ESP32-based devices (`Smart_Collar`, `Digi-Cup`, and `Central_Hub`), open their respective C++ code in PlatformIO and update the following configuration constants:
 
-* **Wi-Fi Credentials:** Hardcode or configure the local `SSID` and `PASSWORD` so the devices can connect to the farm's network or hotspot.
-* **Backend Endpoint URL:** Point the HTTP POST requests to the live backend server (e.g., `http://<YOUR-SERVER-IP>:5000/api/telemetry/ingest` or `/spot-check`).
-* **Authentication Keys:** Set the `DEVICE_INGEST_KEY` header in the firmware code. This must exactly match the `DEVICE_INGEST_KEY` in the backend `.env` file to prevent unauthorized data injections.
-* **Farm ID:** Ensure the `farm_id` payload being sent by the devices matches the `farm_id` of the registered user in the database. The backend is designed to aggressively reject data if this does not match, ensuring data privacy between farms.
+* **Wi-Fi / Cellular Credentials:** Hardcode or configure the local `SSID` and `PASSWORD` (or SIM APN like `jionet`) so the devices can connect to the internet.
+* **Backend Endpoint URL:** Point the HTTP POST requests to the live AWS server. Since Nginx proxies requests on port 80, the URL should be:
+  `http://16.176.145.91/api/telemetry/spot-check`
+* **Authentication Keys:** Set the `x-device-key` header in the firmware HTTP request to match the `DEVICE_INGEST_KEY` in the backend (e.g., `hackcypher_nandi_2026`).
+* **RFID and Farm ID:** Ensure the `farm_id` payload being sent by the devices matches the `farm_id` of the registered user in the database, and the `rfid_tag` matches the animal profile.
 
-## 2. Backend Environment Setup (`.env`)
-The Node.js backend requires specific environment variables to activate the integration components. Update the `backend/.env` file:
+## 2. Server Infrastructure (AWS Docker)
 
-* **Authentication:** Set `DEVICE_INGEST_KEY=<your-secret-key>` to authenticate incoming hardware requests.
-* **AI Service Connection:** Set `AI_SERVICE_URL=http://127.0.0.1:8000` so the Node.js backend knows where to forward the telemetry for machine learning inferences.
-* **MQTT Bridge (Optional):** If the **Central Hub** is configured to act as a LoRa-to-MQTT bridge (for offline barns), set `MQTT_ENABLED=true` and provide the `MQTT_BROKER_URL` (such as a local Mosquitto instance).
+The backend Node.js server and Python AI microservice are completely containerized. There is no need to manually run `npm start` or `python main.py`.
 
-## 3. Starting the AI Microservice
-To enable real-time risk scoring, the Python AI microservice must be actively running:
+* **Docker Compose:** The entire cloud infrastructure is managed via `docker-compose up -d backend frontend`.
+* **Internal Routing:** The Node.js container automatically routes telemetry to the Python AI container over the internal Docker network (`http://ai_service:8000`).
+* **Database:** Ensure your PostgreSQL container (`nandi-db`) is persistent and running.
 
-* The machine learning models (XGBoost and Random Forest `.joblib` files) are located in the `backend/ai_service` directory.
-* Install the Python dependencies: `pip install -r requirements.txt`
-* Run the FastAPI server: `python main.py`
-* **Note:** No new code needs to be written here. The Node.js backend's `ai_inference_service.js` is already programmed to automatically send hardware features (EC, pH, yield, rumination, etc.) to this Python server and process the returned mastitis risk score.
+## 3. Real-Time Dashboard (Web & APK)
 
-## 4. Website and APK (Frontend)
 The frontend applications require no code logic changes to receive the new data.
 
-* The backend's ingestion service is already integrated with **Socket.io** (`emitToOwner(..., 'telemetry:new', reading)`).
-* As soon as a Digi-Cup or Smart Collar transmits data and the AI assigns a score, the backend instantly pushes this event over WebSockets to the farmer's dashboard.
-* **Action Required:** The only configuration needed is ensuring the Frontend/APK environment configuration (`API_BASE_URL` and `SOCKET_URL`) is pointing to the correct live backend IP address instead of `localhost`.
+* The backend's ingestion service is integrated with Socket.io.
+* As soon as a Digi-Cup or Smart Collar transmits data to the Central Hub, and the AI assigns a risk score, the backend instantly pushes this event over WebSockets to the farmer's dashboard.
+* **Environment Configuration:** The Vite frontend must be built with `VITE_API_URL` and `VITE_SOCKET_URL` pointing to the public AWS IP `16.176.145.91`. This is already handled in your `.env.production` build step.
 
----
+## 4. Testing the Pipeline
 
-**Summary:** The NANDI infrastructure is complete. Connecting the hardware is a matter of updating the C++ firmware to target the backend's IP and secret keys, configuring the Node.js `.env` variables to enable the AI/MQTT connections, and starting the Python ML microservice.
+1. Power on the Central Hub and wait for the cellular modem/Wi-Fi to connect.
+2. Trigger a reading from the Smart Collar and Digi-Cup.
+3. The Central Hub will aggregate the JSON payload and POST it to `http://16.176.145.91/api/telemetry/spot-check`.
+4. Monitor the live React dashboard to see the EC, pH, Viscosity, and AI Risk Score update instantly without refreshing the page.
