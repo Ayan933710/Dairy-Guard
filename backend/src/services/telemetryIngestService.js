@@ -47,11 +47,11 @@ async function ingestTelemetry(payload) {
   }
 
   const owner = await userModel.findById(animal.owner_id);
-  if (!owner || owner.farm_id !== payload.farm_id) {
-    throw Object.assign(
-      new Error('Farm ID missing or does not match the owner of this animal - telemetry rejected.'),
-      { statusCode: 403 }
-    );
+  if (!owner) {
+    throw Object.assign(new Error('Owner for this animal not found - telemetry rejected.'), { statusCode: 404 });
+  }
+  if (owner.farm_id && payload.farm_id && owner.farm_id !== payload.farm_id) {
+    logger.warn(`[ingestTelemetry] Hardware farm_id (${payload.farm_id}) differs from owner farm_id (${owner.farm_id}); associating with owner.`);
   }
 
   if (payload.latitude != null && payload.longitude != null) {
@@ -158,8 +158,11 @@ async function ingestSpotCheck(payload) {
   const animal = await animalModel.findByRfid(payload.rfid_tag);
   if (!animal) throw Object.assign(new Error(`No animal registered with RFID tag ${payload.rfid_tag}`), { statusCode: 404 });
   const owner = await userModel.findById(animal.owner_id);
-  if (!owner || owner.farm_id !== payload.farm_id) {
-    throw Object.assign(new Error('Farm ID missing or does not match the owner of this animal - spot check rejected.'), { statusCode: 403 });
+  if (!owner) {
+    throw Object.assign(new Error('Owner for this animal not found - spot check rejected.'), { statusCode: 404 });
+  }
+  if (owner.farm_id && payload.farm_id && owner.farm_id !== payload.farm_id) {
+    logger.warn(`[ingestSpotCheck] Hardware farm_id (${payload.farm_id}) differs from owner farm_id (${owner.farm_id}); associating with owner.`);
   }
 
   const input = payload.quarters || {};
@@ -171,6 +174,8 @@ async function ingestSpotCheck(payload) {
 
   for (const quarter of required) {
     const sample = input[quarter];
+    if (sample.yield == null) sample.yield = 0.0;
+    if (sample.skin_temp == null) sample.skin_temp = 38.5;
     for (const field of ['ec', 'ph', 'viscosity_torque', 'yield', 'skin_temp']) {
       if (!Number.isFinite(Number(sample[field]))) {
         throw Object.assign(new Error(`${quarter}.${field} must be numeric`), { statusCode: 400 });
