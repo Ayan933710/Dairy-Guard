@@ -26,15 +26,13 @@ export function getApiUrls() {
     ...(originApi ? [originApi] : []),
     ...(custom ? [custom.replace(/\/+$/, '') + (custom.endsWith('/api') ? '' : '/api')] : []),
     ...(configured ? [configured] : []),
-    'http://localhost:5000/api',
-    'http:
-    'http:
+    'http://localhost:5000/api'
   ];
   return Array.from(new Set(rawList.filter(Boolean))).map((value) => value.replace(/\/+$/, ''));
 }
 
 const DEFAULT_API_URLS = getApiUrls();
-const API_URL = DEFAULT_API_URLS[0] || 'http:
+const API_URL = DEFAULT_API_URLS[0] || 'http://localhost:5000/api';
 const TOKEN_STORAGE_KEY = 'nandi_token';
 const REQUEST_TIMEOUT_MS = 8000;
 
