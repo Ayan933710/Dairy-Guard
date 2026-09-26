@@ -31,7 +31,7 @@ function StatCard({ label, value, sub, to }) {
   );
 }
 
-function HerdCard({ animal }) {
+function HerdCard({ animal, liveData }) {
   return (
     <InteractiveCard className="rounded-xl">
       <Link
@@ -56,7 +56,29 @@ function HerdCard({ animal }) {
             {animal.riskScore}%
           </div>
         </div>
-        <div className="mt-4">
+        
+        {liveData && (
+          <div className="mt-4 grid grid-cols-4 gap-2 border-t border-slate-200 pt-3">
+            <div className="text-center">
+              <p className="text-[10px] uppercase text-milk-dim">Temp</p>
+              <p className="text-xs font-medium text-milk">{liveData.temp != null ? `${Number(liveData.temp).toFixed(1)}°` : '—'}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] uppercase text-milk-dim">EC</p>
+              <p className="text-xs font-medium text-milk">{liveData.ec != null ? Number(liveData.ec).toFixed(1) : '—'}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] uppercase text-milk-dim">pH</p>
+              <p className="text-xs font-medium text-milk">{liveData.ph != null ? Number(liveData.ph).toFixed(1) : '—'}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] uppercase text-milk-dim">Rum</p>
+              <p className="text-xs font-medium text-milk">{liveData.rumination != null ? `${liveData.rumination}` : '—'}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-3">
           <RiskBadge risk={animal.risk} />
         </div>
       </Link>
@@ -202,16 +224,47 @@ export default function HerdOverviewPage() {
   const hasMounted = useRef(false);
   useEffect(() => { hasMounted.current = true; }, []);
 
+  const [liveData, setLiveData] = useState({});
+
   useEffect(() => {
     // Import socket dynamically if not at top, but let's just use connectSocket which we will import
     import('../../lib/socket.js').then(({ connectSocket }) => {
       const socket = connectSocket();
-      const handleUpdate = () => refetch();
-      socket.on('animal:updated', handleUpdate);
-      socket.on('telemetry:new', handleUpdate);
+      
+      const handleAnimalUpdate = () => refetch();
+      
+      const handleTelemetryNew = (payload) => {
+        if (payload.readings && payload.readings.length > 0) {
+          const firstReading = payload.readings[0];
+          setLiveData(prev => ({
+            ...prev,
+            [firstReading.animal_id]: {
+              temp: firstReading.skin_temp,
+              ec: firstReading.ec,
+              ph: firstReading.ph,
+              rumination: firstReading.rumination,
+            }
+          }));
+        } else if (payload.animal_id) {
+          // single reading
+          setLiveData(prev => ({
+            ...prev,
+            [payload.animal_id]: {
+              temp: payload.skin_temp,
+              ec: payload.ec,
+              ph: payload.ph,
+              rumination: payload.rumination,
+            }
+          }));
+        }
+        refetch();
+      };
+
+      socket.on('animal:updated', handleAnimalUpdate);
+      socket.on('telemetry:new', handleTelemetryNew);
       return () => {
-        socket.off('animal:updated', handleUpdate);
-        socket.off('telemetry:new', handleUpdate);
+        socket.off('animal:updated', handleAnimalUpdate);
+        socket.off('telemetry:new', handleTelemetryNew);
       };
     });
   }, [refetch]);
@@ -286,7 +339,7 @@ export default function HerdOverviewPage() {
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
           {safeAnimals.map((animal) => (
-            <HerdCard key={animal.id} animal={animal} />
+            <HerdCard key={animal.id} animal={animal} liveData={liveData[animal.id]} />
           ))}
         </motion.div>
       </section>
