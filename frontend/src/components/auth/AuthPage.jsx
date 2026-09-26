@@ -50,7 +50,7 @@ export default function AuthPage() {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const baseUrl = getCustomApiUrl() || getApiUrls()[0] || 'http:
+        const baseUrl = getCustomApiUrl() || getApiUrls()[0] || 'http://localhost:5000/api';
         const base = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl;
         const res = await fetch(`${base}/api/config`);
         const data = await res.json();
@@ -235,8 +235,8 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    const current = getCustomApiUrl() || getApiUrls()[0] || 'http:
-                    const entered = window.prompt('Enter your computer Backend URL (e.g. http:
+                    const current = getCustomApiUrl() || getApiUrls()[0] || 'http://localhost:5000/api';
+                    const entered = window.prompt('Enter your computer Backend URL (e.g. http://localhost:5000/api)', current);
                     if (entered !== null && entered.trim()) {
                       setCustomApiUrl(entered.trim());
                       setFormError(null);
@@ -244,7 +244,7 @@ export default function AuthPage() {
                   }}
                   style={{ background: 'none', border: '1px dashed rgba(16, 185, 129, 0.4)', borderRadius: '6px', padding: '4px 10px', color: '#10b981', fontSize: '11px', cursor: 'pointer' }}
                 >
-                  Backend: {getCustomApiUrl() || getApiUrls()[0] || 'http:
+                  Backend: {getCustomApiUrl() || getApiUrls()[0] || 'http://localhost:5000/api'}
                 </button>
               </div>
               <button type="submit" className="auth-submit" disabled={isSubmitting || (mode === 'signup' && !termsAccepted)}>

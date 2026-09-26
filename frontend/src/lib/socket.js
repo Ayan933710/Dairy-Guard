@@ -8,7 +8,7 @@ export function getSocketUrl() {
   if (urls.length > 0) {
     return urls[0].replace(/\/api\/?$/, '');
   }
-  return 'http:
+  return 'http://localhost:5000';
 }
 
 let socket = null;
