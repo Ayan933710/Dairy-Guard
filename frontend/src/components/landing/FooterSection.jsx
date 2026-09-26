@@ -57,7 +57,7 @@ export default function FooterSection() {
 
       <div className="mx-auto mt-8 flex max-w-5xl flex-wrap items-center justify-between gap-3 border-t border-milk/10 pt-5">
         <p className="text-sm text-milk-dim">{t('apkUnavailable')}</p>
-        <a href={import.meta.env.VITE_ANDROID_APK_URL || '/nandi.apk'} download className="dashboard-primary-button"><Download size={15} /> {t('downloadApk')}</a>
+        <a href={import.meta.env.VITE_ANDROID_APK_URL || `/nandi.apk?t=${Date.now()}`} download className="dashboard-primary-button"><Download size={15} /> {t('downloadApk')}</a>
       </div>
 
       <p className="mx-auto mt-8 max-w-5xl border-t border-milk/10 pt-4 text-xs text-milk-dim/70">
