@@ -130,40 +130,16 @@ export default function AnimalDetailPage() {
 
       let data = null;
 
-      // 1. Try calling through the backend API proxy (works on mobile APK, LAN, and desktop)
       try {
+        const res = await api.post(`/predictions/run/${animal.id}`, {});
+        data = res?.risk?.details || res;
+      } catch (_) {
         data = await api.post(`/cow/${encodeURIComponent(targetCowId)}/predict`, {});
-      } catch (proxyErr) {
-        // 2. Fallback to direct FastAPI call with dynamic host resolution
-        const aiBaseUrl = (
-          import.meta.env.VITE_AI_URL?.trim() ||
-          (import.meta.env.VITE_API_URL
-            ? new URL(import.meta.env.VITE_API_URL).origin.replace(/:\d+$/, ':8000')
-            : '') ||
-          'http://172.16.60.135:8000'
-        ).replace(/\/+$/, '');
-
-        let res = await fetch(`${aiBaseUrl}/api/cow/${encodeURIComponent(targetCowId)}/predict`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!res.ok && res.status === 404 && targetCowId !== 'C-118') {
-          res = await fetch(`${aiBaseUrl}/api/cow/C-118/predict`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
-
-        if (!res.ok) {
-          throw new Error(proxyErr.message || `Server error: ${res.status}`);
-        }
-
-        data = await res.json();
       }
 
       if (data) {
         setLivePrediction(data);
+        refetch();
       }
     } catch (err) {
       setRunError(err.message || 'Could not run a new prediction.');

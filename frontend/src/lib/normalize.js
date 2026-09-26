@@ -25,11 +25,16 @@ export function normalizeAnimal(row) {
 }
 
 export function normalizeQuarter(row) {
+  if (!row) return null;
   return {
     quarter: row.quarter,
-    ecDelta: Number(row.ec_delta_pct),
-    tempDelta: Number(row.temp_delta_c),
-    yieldDrop: Number(row.yield_drop_pct),
+    ec: row.ec != null ? Number(row.ec) : (row.ec_delta_pct != null ? Number(row.ec_delta_pct) : null),
+    ph: row.ph != null ? Number(row.ph) : (row.ph_delta_pct != null ? Number(row.ph_delta_pct) : null),
+    viscosity: row.viscosity != null ? Number(row.viscosity) : (row.yield_drop_pct != null ? Number(row.yield_drop_pct) : null),
+    color: row.color ?? (row.ph != null ? (Number(row.ph) < 6.2 ? 'Flaky' : 'Normal') : '—'),
+    ecDelta: Number(row.ec_delta_pct || 0),
+    tempDelta: Number(row.temp_delta_c || 0),
+    yieldDrop: Number(row.yield_drop_pct || 0),
   };
 }
 

@@ -25,12 +25,13 @@ export async function createAnimal({ display_tag, rfid_tag, name, species, breed
 }
 
 export async function fetchAnimalDetail(animalId) {
-  const { animal, quarters, trend, latestPrediction } = await api.get(`/animals/${animalId}`);
+  const { animal, quarters, trend, latestPrediction, latestTelemetry } = await api.get(`/animals/${animalId}`);
   return {
     animal: normalizeAnimal(animal),
-    quarters: quarters.map(normalizeQuarter),
-    trend: trend.map(normalizeTrendPoint),
+    quarters: (quarters || []).map(normalizeQuarter).filter(Boolean),
+    trend: (trend || []).map(normalizeTrendPoint),
     latestPrediction: normalizePrediction(latestPrediction),
+    latestTelemetry,
   };
 }
 
