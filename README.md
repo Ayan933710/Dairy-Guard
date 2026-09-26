@@ -4,7 +4,7 @@
   <p><b>An AI-powered IoT ecosystem for proactive dairy herd health monitoring, Subclinical Mastitis detection, and yield optimization.</b></p>
   <p>
     <a href="http://16.176.145.91/"><strong>🌐 Live Website</strong></a> · 
-    <a href="[YOUR_DEMO_VIDEO_LINK_HERE]"><strong>🎥 Demo Video</strong></a>
+    <a href="https://youtu.be/B7sDeht5f7s"><strong>🎥 Demo Video</strong></a>
   </p>
 </div>
 
@@ -34,6 +34,34 @@ NANDI operates on a robust, four-tier architecture designed for low latency (< 2
 
 ### Data Flow
 `Sensors (Raw)` ➔ `ESP32 (Binary Compress)` ➔ `LoRa` ➔ `Central Hub` ➔ `HTTP/REST` ➔ `PostgreSQL / FastAPI` ➔ `WebSockets` ➔ `React Dashboard`
+
+---
+
+## 📂 Repository Structure
+
+```text
+NANDI/
+├── backend/                  # Handles API requests, websockets, and database operations
+│   ├── ai_service/           # Python/FastAPI engine for health risk predictions
+│   ├── src/                  # Main backend source code (controllers, models, routes)
+│   ├── server.js             # Node.js/Express entry point
+│   ├── create_db.js          # Database creation script
+│   ├── setup_new_db.sql      # SQL script for initializing the PostgreSQL schema
+│   └── nandi.apk             # Compiled Android application build
+├── frontend/                 # React.js/Vite frontend for the farmer/vet dashboard
+│   ├── android/              # Android app build files (Capacitor)
+│   ├── src/                  # UI components, pages, and hooks
+│   ├── public/               # Public static assets
+│   ├── tailwind.config.js    # Tailwind CSS styling configuration
+│   └── vite.config.js        # Vite bundler configuration
+├── firmware/                 # C++ code for edge hardware (ESP32)
+│   ├── Central_Hub/          # LoRa gateway code bridging hardware network to internet
+│   ├── Digi-Cup/             # Sensor code for in-line milk chemistry & viscosity analysis
+│   └── Smart_Collar/         # Edge node code for IMU and temperature monitoring
+├── Hardware_Integration_Plan.md # Technical documentation on hardware wiring and assembly
+├── deploy-ec2.sh             # Shell script for deploying the platform on AWS EC2
+└── docker-compose.yml        # Docker configuration for containerized deployment
+```
 
 ---
 
