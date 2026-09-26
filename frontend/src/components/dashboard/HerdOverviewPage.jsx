@@ -202,6 +202,20 @@ export default function HerdOverviewPage() {
   const hasMounted = useRef(false);
   useEffect(() => { hasMounted.current = true; }, []);
 
+  useEffect(() => {
+    // Import socket dynamically if not at top, but let's just use connectSocket which we will import
+    import('../../lib/socket.js').then(({ connectSocket }) => {
+      const socket = connectSocket();
+      const handleUpdate = () => refetch();
+      socket.on('animal:updated', handleUpdate);
+      socket.on('telemetry:new', handleUpdate);
+      return () => {
+        socket.off('animal:updated', handleUpdate);
+        socket.off('telemetry:new', handleUpdate);
+      };
+    });
+  }, [refetch]);
+
   async function addAnimal(payload) {
     await createAnimal(payload);
     setIsModalOpen(false);
