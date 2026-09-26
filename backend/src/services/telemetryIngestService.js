@@ -206,15 +206,18 @@ async function ingestSpotCheck(payload) {
   }
 
   await deviceModel.upsertLastSeen(payload.device_id, { batteryPct: payload.battery_pct }).catch(() => {});
-  const context = buildSpotCheckContext(input, animal.thi);
+  const topTemp = payload.skin_temp ?? input.LF?.skin_temp ?? 38.5;
+  const topThi = payload.thi != null ? Number(payload.thi) : (animal.thi || 72.4);
+
+  const context = buildSpotCheckContext(input, topThi);
   const features = {
     ec: input.LF.ec,
     ph: input.LF.ph,
     viscosity_torque: input.LF.viscosity_torque,
     milk_yield: input.LF.yield,
     rumination: payload.rumination,
-    skin_temp: input.LF.skin_temp,
-    thi: animal.thi,
+    skin_temp: topTemp,
+    thi: topThi,
     lactation_number: animal.lactation_number,
     age: animal.age,
   };
@@ -224,7 +227,7 @@ async function ingestSpotCheck(payload) {
     riskLevel: risk.level,
     riskScore: score,
     ruminationDeltaPct: payload.rumination,
-    thi: animal.thi,
+    thi: topThi,
   });
   await riskModel.insertRiskHistory(animal.id, { riskScore: score, riskLevel: risk.level, source: risk.source });
 

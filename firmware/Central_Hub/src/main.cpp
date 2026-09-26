@@ -333,11 +333,11 @@ void loop()
     }
     float thi = (0.8 * tempC) + ((humidity / 100.0) * (tempC - 14.4)) + 46.4;
 
-    auto buildQ = [](Quarter q)
+    auto buildQ = [localCollarTemp](Quarter q)
     {
       return "{\"ec\":" + String(q.ec, 2) +
              ",\"ph\":" + String(q.ph, 2) +
-             ",\"skin_temp\":38.5" +
+             ",\"skin_temp\":" + String(localCollarTemp, 1) +
              ",\"yield\":0.0" +
              ",\"viscosity_torque\":" + String(q.v, 1) + "}";
     };
@@ -347,7 +347,9 @@ void loop()
     postData += "\"device_key\":\"hackcypher_nandi_2026\",";
     postData += "\"rfid_tag\":\"900000000000118\",";
     postData += "\"farm_id\":\"FARM0001\",";
+    postData += "\"skin_temp\":" + String(localCollarTemp, 1) + ",";
     postData += "\"rumination\":" + String(localCollarRum, 1) + ",";
+    postData += "\"thi\":" + String(thi, 1) + ",";
     postData += "\"quarters\":{";
     postData += "\"LF\":" + buildQ(localLF) + ",";
     postData += "\"RF\":" + buildQ(localRF) + ",";

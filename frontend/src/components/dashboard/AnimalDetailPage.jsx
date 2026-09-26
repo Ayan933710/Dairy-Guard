@@ -68,15 +68,15 @@ export default function AnimalDetailPage() {
         ...animal,
         risk: getRiskKey(livePrediction.risk_category || (livePrediction.overall_risk_score >= 70 ? 'high' : livePrediction.overall_risk_score >= 25 ? 'moderate' : 'low')),
         riskScore: livePrediction.overall_risk_score ?? livePrediction.risk_score_pct,
-        rumination: livePrediction.rumination_delta ?? animal.rumination,
-        thi: livePrediction.shed_thi ?? animal.thi,
-        cowTemp: livePrediction.cow_body_temp ?? livePrediction.cow_temperature ?? animal.cowTemperature ?? animal.temperature ?? animal.bodyTemp ?? animal.body_temperature ?? null,
+        rumination: livePrediction.rumination_delta ?? detail?.latestTelemetry?.rumination ?? animal.rumination ?? 0,
+        thi: livePrediction.shed_thi ?? animal.thi ?? detail?.latestTelemetry?.raw_payload?.thi ?? 72.4,
+        cowTemp: livePrediction.cow_body_temp ?? livePrediction.cow_temperature ?? detail?.latestTelemetry?.skin_temp ?? animal.cowTemperature ?? animal.temperature ?? animal.bodyTemp ?? animal.body_temperature ?? null,
       }
     : {
         ...animal,
-        rumination: detail?.latestTelemetry?.rumination ?? animal.rumination,
+        rumination: detail?.latestTelemetry?.rumination ?? animal.rumination ?? 0,
         thi: animal.thi ?? detail?.latestTelemetry?.raw_payload?.thi ?? 72.4,
-        cowTemp: detail?.latestTelemetry?.skin_temp ?? animal.cowTemperature ?? animal.temperature ?? animal.bodyTemp ?? animal.body_temperature ?? 38.5,
+        cowTemp: detail?.latestTelemetry?.skin_temp ?? animal.cowTemperature ?? animal.temperature ?? animal.bodyTemp ?? animal.body_temperature ?? null,
       };
 
   const activeQuarters = livePrediction?.quarter_results || livePrediction?.quarters
